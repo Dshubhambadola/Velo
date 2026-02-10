@@ -48,6 +48,19 @@ func main() {
 	{
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
+		auth.POST("/forgot-password", authHandler.ForgotPassword)
+		auth.POST("/reset-password", authHandler.ResetPassword)
+		auth.POST("/magic-link", authHandler.RequestMagicLink)
+		auth.POST("/magic-login", authHandler.LoginWithMagicLink)
+		auth.POST("/2fa/verify", authHandler.Verify2FA)
+	}
+
+	// Protected Routes
+	protected := r.Group("/api")
+	protected.Use(middleware.AuthMiddleware())
+	{
+		protected.POST("/auth/2fa/generate", authHandler.Generate2FA)
+		protected.POST("/auth/2fa/enable", authHandler.Enable2FA)
 	}
 
 	// Health Check

@@ -18,9 +18,17 @@ type User struct {
 	SSOProvider         string    // google, microsoft, saml
 	SSOSubject          string
 	OnboardingCompleted bool `gorm:"default:false"`
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	DeletedAt           gorm.DeletedAt `gorm:"index"`
+	// Advanced Auth
+	ResetToken              string
+	ResetTokenExpiresAt     time.Time
+	MagicLinkToken          string
+	MagicLinkTokenExpiresAt time.Time
+	TwoFactorEnabled        bool
+	TwoFactorSecret         string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 
 	// Relationships
 	Company   Company

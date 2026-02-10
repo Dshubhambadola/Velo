@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 
+	"velo/internal/adapters/http"
+	"velo/internal/core/services"
 	"velo/internal/middleware"
 	"velo/pkg/database"
 
@@ -17,8 +19,13 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	// Connect to Redis (for rate limiting, etc.)
+	// Connect Requirements
+	database.ConnectPostgres()
 	database.ConnectRedis()
+
+	// Initialize Services
+	authService := services.NewAuthService(database.DB)
+	authHandler := http.NewAuthHandler(authService)
 
 	// Initialize Gin
 	r := gin.Default()
@@ -33,6 +40,26 @@ func main() {
 			"service": "api-gateway",
 		})
 	})
+
+	// Auth Routes
+	auth := r.Group("/auth")
+	{
+		auth.POST("/register", authHandler.Register)
+		auth.POST("/login", authHandler.Login)
+		auth.POST("/forgot-password", authHandler.ForgotPassword)
+		auth.POST("/reset-password", authHandler.ResetPassword)
+		auth.POST("/magic-link", authHandler.RequestMagicLink)
+		auth.POST("/magic-login", authHandler.LoginWithMagicLink)
+		auth.POST("/2fa/verify", authHandler.Verify2FA)
+	}
+
+	// Protected Routes
+	protected := r.Group("/api")
+	protected.Use(middleware.AuthMiddleware())
+	{
+		protected.POST("/auth/2fa/generate", authHandler.Generate2FA)
+		protected.POST("/auth/2fa/enable", authHandler.Enable2FA)
+	}
 
 	// Start Server
 	port := os.Getenv("PORT")
