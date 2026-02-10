@@ -1,0 +1,13 @@
+# Common
+node_modules/
+.DS_Store
+dist/
+web/dist/
+web/node_modules/
+.env
+.env.local
+coverage/
+
+# Misc
+.vscode/
+.idea/
