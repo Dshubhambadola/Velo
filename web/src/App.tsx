@@ -1,6 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
+import PayrollDashboard from './pages/PayrollDashboard';
+import PayrollNewBatch from './pages/PayrollNewBatch';
+import PayrollUpload from './pages/PayrollUpload';
+import PayrollReview from './pages/PayrollReview';
+import PayrollManualEntry from './pages/PayrollManualEntry';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import EmailVerification from './pages/EmailVerification';
@@ -43,6 +48,15 @@ function App() {
             <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/payroll" element={<PayrollDashboard />} />
+                <Route path="/payroll/new" element={<PayrollNewBatch />} />
+                <Route path="/payroll/upload" element={<PayrollUpload />} />
+                <Route path="/payroll/manual" element={<PayrollManualEntry />} />
+                <Route path="/payroll/review" element={<PayrollReview />} />
+                <Route path="/payroll/confirm" element={<PayrollConfirmation />} />
+                <Route path="/payroll/execute" element={<PayrollExecution />} />
+                <Route path="/payroll/success" element={<PayrollSuccess />} />
+                <Route path="/payroll/batch/:id" element={<PayrollBatchDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/verify-email" element={<EmailVerification />} />
