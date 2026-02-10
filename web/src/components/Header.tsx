@@ -1,12 +1,10 @@
 import React from 'react';
 
 interface HeaderProps {
-    title?: string;
-    description?: string;
     onNewBatch?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, description, onNewBatch }) => {
+const Header: React.FC<HeaderProps> = ({ onNewBatch }) => {
     return (
         <header className="h-20 border-b border-border-dark flex items-center justify-between px-8 bg-background-dark/80 backdrop-blur-md sticky top-0 z-10">
             <div className="flex items-center gap-4 flex-1">

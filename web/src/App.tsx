@@ -40,6 +40,10 @@ import DeviceTrust from './pages/DeviceTrust';
 import DeviceManagement from './pages/DeviceManagement';
 import MagicLinkRequest from './pages/MagicLinkRequest';
 import MagicLinkSent from './pages/MagicLinkSent';
+import PayrollConfirmation from './pages/PayrollConfirmation';
+import PayrollExecution from './pages/PayrollExecution';
+import PayrollSuccess from './pages/PayrollSuccess';
+import PayrollBatchDetail from './pages/PayrollBatchDetail';
 import MagicLinkSuccess from './pages/MagicLinkSuccess';
 
 function App() {
