@@ -75,6 +75,15 @@ export default {
                 "obsidian-section": "#1C1C1C", // Updated for Device Trust
                 "vibrant-blue": "#2d5cf7", // Updated for Magic Link
                 "dark-charcoal": "#121212", // Updated for Magic Link
+                "charcoal-modal": "#121212", // Updated for Payroll Batch
+                "card-midnight": "#151921", // Updated for Payroll Batch
+                "border-muted": "#1f1f23", // Updated for Payroll Review
+                "neutral-silver": "#A1A1AA", // Updated for Payroll Manual Entry
+                "vibrant-green": "#13ec5b", // Updated for Payroll Success
+                "surface-accent": "#1a1a1a", // Updated for Execution Progress
+                "obsidian-silver": "#A0A0A0", // Updated for Payroll Success
+                "surface-dark": "#121212", // Updated for Batch Detail
+                "border-dark-obsidian": "#1f1f1f", // Updated for Batch Detail
             },
             fontFamily: {
                 "display": ["Inter", "sans-serif"]
