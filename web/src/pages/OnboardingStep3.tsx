@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { updateKYC } from '../api/onboarding';
 
 const OnboardingStep3: React.FC = () => {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         firstName: 'Jonathan',
         lastName: 'Anderson',
@@ -20,9 +22,31 @@ const OnboardingStep3: React.FC = () => {
         expiryDate: ''
     });
 
-    const handleContinue = () => {
-        // Navigate to dashboard (placeholder for Step 4)
-        navigate('/onboarding/document-upload');
+    const handleContinue = async () => {
+        setIsLoading(true);
+        try {
+            await updateKYC({
+                first_name: formData.firstName,
+                last_name: formData.lastName,
+                dob: formData.dob,
+                phone_code: formData.phoneCode,
+                phone: formData.phone,
+                address: formData.address,
+                city: formData.city,
+                state: formData.state,
+                zip: formData.zip,
+                country: formData.country,
+                id_type: formData.idType,
+                id_number: formData.docNumber,
+                issuing_country: formData.issuingCountry,
+                id_expiry: formData.expiryDate
+            });
+            navigate('/onboarding/document-upload');
+        } catch (error) {
+            console.error('Failed to update KYC details', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -243,8 +267,8 @@ const OnboardingStep3: React.FC = () => {
                                             Back
                                         </Link>
                                         <div className="order-1 md:order-2 flex flex-col items-end gap-2 w-full md:w-auto">
-                                            <button className="w-full md:w-auto px-8 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-blue-800 shadow-lg shadow-primary/10 transition-all" type="submit">
-                                                Continue to Document Upload
+                                            <button className={`w-full md:w-auto px-8 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-blue-800 shadow-lg shadow-primary/10 transition-all ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} type="submit" disabled={isLoading}>
+                                                {isLoading ? 'Saving...' : 'Continue to Document Upload'}
                                             </button>
                                             <button className="text-sm font-medium text-primary hover:text-blue-400 hover:underline" type="button">
                                                 Save and complete later

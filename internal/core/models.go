@@ -18,6 +18,21 @@ type User struct {
 	SSOProvider         string    // google, microsoft, saml
 	SSOSubject          string
 	OnboardingCompleted bool `gorm:"default:false"`
+
+	// KYC / Profile Details
+	PhoneNumber    string
+	PhoneCode      string
+	DateOfBirth    string // YYYY-MM-DD
+	AddressStreet  string
+	AddressCity    string
+	AddressState   string
+	AddressZip     string
+	AddressCountry string
+	IDType         string
+	IDNumber       string
+	IDExpiry       string // YYYY-MM-DD
+	IssuingCountry string
+
 	// Advanced Auth
 	ResetToken              string
 	ResetTokenExpiresAt     time.Time
@@ -40,6 +55,10 @@ type Company struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Name      string    `gorm:"not null"`
 	Domain    string    `gorm:"uniqueIndex"`
+	Website   string
+	Size      string
+	Industry  string
+	Location  string // Country
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

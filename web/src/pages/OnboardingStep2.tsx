@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { updateCompany } from '../api/onboarding';
 
 const OnboardingStep2: React.FC = () => {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         companyName: 'Acme Corp',
         website: '',
@@ -11,9 +13,23 @@ const OnboardingStep2: React.FC = () => {
         industry: 'Technology'
     });
 
-    const handleContinue = () => {
-        // Navigate to dashboard for now as we don't have step 3
-        navigate('/onboarding/step3');
+    const handleContinue = async () => {
+        setIsLoading(true);
+        try {
+            await updateCompany({
+                name: formData.companyName,
+                website: formData.website,
+                size: formData.size,
+                industry: formData.industry,
+                location: formData.location
+            });
+            navigate('/onboarding/step3');
+        } catch (error) {
+            console.error('Failed to update company details', error);
+            // Ideally show error toast
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -131,8 +147,8 @@ const OnboardingStep2: React.FC = () => {
                                     <span className="material-icons text-lg">arrow_back</span>
                                     Back
                                 </Link>
-                                <button type="submit" className="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-10 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95">
-                                    Continue
+                                <button type="submit" disabled={isLoading} className={`bg-primary hover:bg-primary/90 text-white font-bold py-3 px-10 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                    {isLoading ? 'Saving...' : 'Continue'}
                                 </button>
                             </div>
                         </form>

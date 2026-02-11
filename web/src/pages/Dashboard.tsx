@@ -11,6 +11,32 @@ const Dashboard: React.FC = () => {
     const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
     // State for the quick actions modal
     const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+    // State for wallet balance
+    const [balance, setBalance] = useState<string>("0.00");
+    const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+
+    useEffect(() => {
+        const fetchBalance = async () => {
+            try {
+                // In a real app, we would get the wallet ID from user context or auth
+                // For MVP, we might hardcode or fetch the first wallet
+                // For now, let's assume we fetch a default wallet or just mock the call to the endpoint
+                // const walletData = await walletAPI.getBalance('default-wallet-id');
+                // setBalance(walletData.available);
+
+                // Simulating fetch
+                setTimeout(() => {
+                    setBalance("125450.23");
+                    setIsLoadingBalance(false);
+                }, 1000);
+            } catch (error) {
+                console.error("Failed to fetch balance", error);
+                setIsLoadingBalance(false);
+            }
+        };
+
+        fetchBalance();
+    }, []);
 
     // Handle CMD+K to open Quick Actions
     useEffect(() => {
@@ -85,7 +111,7 @@ const Dashboard: React.FC = () => {
                     {/* KPI Section */}
                     <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Custom Wallet Balance Card */}
-                        <WalletBalanceCard />
+                        <WalletBalanceCard balance={balance} loading={isLoadingBalance} />
 
                         {/* Pending Transactions */}
                         <div className="bg-obsidian-charcoal border border-border-dark-obsidian p-6 rounded-xl group hover:border-slate-700 transition-colors flex flex-col justify-between">

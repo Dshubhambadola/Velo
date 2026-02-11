@@ -98,3 +98,45 @@ func (s *PayrollService) ApproveBatch(ctx context.Context, approvalID, approverI
 
 	return nil
 }
+
+// ListBatches retrieves all batches for a company
+func (s *PayrollService) ListBatches(companyID uuid.UUID) ([]core.PayrollBatch, error) {
+	var batches []core.PayrollBatch
+	if err := s.DB.Where("company_id = ?", companyID).Order("created_at desc").Find(&batches).Error; err != nil {
+		return nil, err
+	}
+	return batches, nil
+}
+
+// GetBatchDetails retrieves a batch by ID with payments
+func (s *PayrollService) GetBatchDetails(batchID uuid.UUID) (*core.PayrollBatch, error) {
+	var batch core.PayrollBatch
+	if err := s.DB.Preload("Patterns").First(&batch, "id = ?", batchID).Error; err != nil {
+		return nil, err
+	}
+	return &batch, nil
+}
+
+// ExecuteBatch processes a batch
+func (s *PayrollService) ExecuteBatch(ctx context.Context, batchID uuid.UUID) error {
+	var batch core.PayrollBatch
+	if err := s.DB.First(&batch, "id = ?", batchID).Error; err != nil {
+		return err
+	}
+
+	if batch.Status == "completed" || batch.Status == "processing" {
+		return errors.New("batch is already processed")
+	}
+
+	// Update Status
+	batch.Status = "processing"
+	s.DB.Save(&batch)
+
+	// Mock Execution (In real app, call Wallet Service)
+	time.Sleep(2 * time.Second) // Simulate processing
+
+	batch.Status = "completed"
+	s.DB.Save(&batch)
+
+	return nil
+}
