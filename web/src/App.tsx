@@ -45,6 +45,7 @@ import PayrollExecution from './pages/PayrollExecution';
 import PayrollSuccess from './pages/PayrollSuccess';
 import PayrollBatchDetail from './pages/PayrollBatchDetail';
 import MagicLinkSuccess from './pages/MagicLinkSuccess';
+import BatchValidationFailed from './pages/BatchValidationFailed';
 
 function App() {
     return (
@@ -61,6 +62,7 @@ function App() {
                 <Route path="/payroll/execute" element={<PayrollExecution />} />
                 <Route path="/payroll/success" element={<PayrollSuccess />} />
                 <Route path="/payroll/batch/:id" element={<PayrollBatchDetail />} />
+                <Route path="/payroll/validation-failed" element={<BatchValidationFailed />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/verify-email" element={<EmailVerification />} />
