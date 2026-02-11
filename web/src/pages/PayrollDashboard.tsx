@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import BatchListHeader from '../components/BatchListHeader';
+import AdvancedFilterSidebar from '../components/AdvancedFilterSidebar';
 
 const PayrollDashboard: React.FC = () => {
     const navigate = useNavigate();
+    const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
 
     // Mock Data for KPI Cards
     const stats = [
@@ -120,14 +123,12 @@ const PayrollDashboard: React.FC = () => {
                     </div>
 
                     {/* Table Section */}
+                    {/* Replaced static header with advanced filter header */}
+                    <BatchListHeader onOpenFilters={() => setIsFilterSidebarOpen(true)} />
+
                     <div className="bg-surface-dark border border-border-dark rounded-xl overflow-hidden shadow-2xl">
-                        <div className="px-6 py-4 border-b border-border-dark flex items-center justify-between bg-white/5">
-                            <h3 className="font-semibold text-white">Recent Batches</h3>
-                            <div className="flex items-center gap-2">
-                                <button className="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded bg-white/5 border border-white/10 transition-colors">Filter</button>
-                                <button className="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded bg-white/5 border border-white/10 transition-colors">Export CSV</button>
-                            </div>
-                        </div>
+                        {/* Removed old static header */}
+
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
@@ -226,6 +227,11 @@ const PayrollDashboard: React.FC = () => {
                     </footer>
                 </div>
             </main>
+            {/* Advanced Filter Sidebar */}
+            <AdvancedFilterSidebar
+                isOpen={isFilterSidebarOpen}
+                onClose={() => setIsFilterSidebarOpen(false)}
+            />
         </div>
     );
 };
