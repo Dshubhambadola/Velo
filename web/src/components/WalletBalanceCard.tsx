@@ -1,6 +1,11 @@
 import React from 'react';
 
-const WalletBalanceCard: React.FC = () => {
+interface WalletBalanceCardProps {
+    balance: string;
+    loading?: boolean;
+}
+
+const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({ balance, loading = false }) => {
     return (
         <div className="bg-obsidian-charcoal border border-border-dark-obsidian rounded-xl shadow-2xl overflow-hidden font-display relative group hover:border-slate-700 transition-colors">
             {/* Header */}
@@ -34,7 +39,13 @@ const WalletBalanceCard: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-baseline gap-1">
-                    <h1 className="text-5xl font-bold bg-gradient-to-br from-primary to-blue-400 bg-clip-text text-transparent tracking-tight">$125,450.23</h1>
+                    {loading ? (
+                        <div className="h-12 w-48 bg-white/10 rounded animate-pulse"></div>
+                    ) : (
+                        <h1 className="text-5xl font-bold bg-gradient-to-br from-primary to-blue-400 bg-clip-text text-transparent tracking-tight">
+                            ${parseFloat(balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </h1>
+                    )}
                 </div>
 
                 {/* Mini Sparkline Graph */}
