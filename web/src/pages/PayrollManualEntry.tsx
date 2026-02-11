@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createBatchManual } from '../api/payroll';
 
 const PayrollManualEntry: React.FC = () => {
     const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Mock Data for Table
     const [recipients, setRecipients] = useState([
@@ -16,6 +18,29 @@ const PayrollManualEntry: React.FC = () => {
         const newRecipients = [...recipients];
         newRecipients[index].amount = value;
         setRecipients(newRecipients);
+    };
+
+    const handleSaveAndContinue = async () => {
+        setIsSubmitting(true);
+        try {
+            // Transform recipients to match API expectation
+            const payments = recipients.map(r => ({
+                wallet_address: r.account || "0x0000000000000000000000000000000000000000", // TODO: validation
+                amount: parseFloat(r.amount.replace(/,/g, '')),
+                currency: "USD"
+            }));
+
+            // Filter out invalid/empty rows if necessary
+            const validPayments = payments.filter(p => p.amount > 0);
+
+            const response = await createBatchManual("Manual Entry Batch", validPayments);
+            navigate(`/payroll/review/${response.batch_id}`);
+        } catch (error) {
+            console.error("Failed to create batch:", error);
+            alert("Failed to create batch. Please check your inputs.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -76,8 +101,8 @@ const PayrollManualEntry: React.FC = () => {
                     <div className="space-y-3">
                         {recipients.map((recipient, index) => (
                             <div key={recipient.id} className={`grid grid-cols-12 gap-4 items-center p-4 rounded-xl transition-colors group ${recipient.status === 'active' ? 'bg-surface border-2 border-primary/50 ring-4 ring-primary/5' :
-                                    recipient.status === 'error' ? 'bg-surface border border-red-500/30 hover:bg-[#1a1a1a]' :
-                                        'bg-surface border border-border-dark hover:bg-[#1a1a1a]'
+                                recipient.status === 'error' ? 'bg-surface border border-red-500/30 hover:bg-[#1a1a1a]' :
+                                    'bg-surface border border-border-dark hover:bg-[#1a1a1a]'
                                 }`}>
                                 <div className={`col-span-1 text-xs font-mono override-text-color ${recipient.status === 'active' ? 'text-primary font-bold' : 'text-neutral-silver'}`}>{recipient.id}</div>
                                 <div className="col-span-3">
@@ -246,11 +271,12 @@ const PayrollManualEntry: React.FC = () => {
                         Save Draft
                     </button>
                     <button
-                        onClick={() => navigate('/payroll/review')}
-                        className="bg-primary hover:bg-primary/90 text-white px-10 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center gap-2"
+                        onClick={handleSaveAndContinue}
+                        disabled={isSubmitting}
+                        className="bg-primary hover:bg-primary/90 text-white px-10 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Review & Continue
-                        <span className="material-icons text-sm">arrow_forward</span>
+                        {isSubmitting ? 'Creating...' : 'Review & Continue'}
+                        {!isSubmitting && <span className="material-icons text-sm">arrow_forward</span>}
                     </button>
                 </div>
             </footer>

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { uploadBatch } from '../api/payroll';
 
 type UploadState = 'idle' | 'uploading' | 'complete';
 
@@ -29,20 +30,23 @@ const PayrollUpload: React.FC = () => {
         e.stopPropagation();
     };
 
-    const startUpload = (selectedFile: File) => {
+    const startUpload = async (selectedFile: File) => {
         setFile(selectedFile);
         setUploadState('uploading');
+        setUploadProgress(10); // Start progress
 
-        // Simulate upload progress
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 5;
-            setUploadProgress(progress);
-            if (progress >= 100) {
-                clearInterval(interval);
-                setUploadState('complete');
-            }
-        }, 100);
+        try {
+            // Description is currently hardcoded as it's not in the UI
+            const response = await uploadBatch(selectedFile, `Batch upload: ${selectedFile.name}`);
+            setUploadProgress(100);
+            setUploadState('complete');
+            // Store batch ID for navigation
+            localStorage.setItem('lastUploadedBatchId', response.batch_id);
+        } catch (error) {
+            console.error("Upload failed", error);
+            setUploadState('idle'); // Or ERROR state if implemented
+            alert("Upload failed. Please try again.");
+        }
     };
 
     const formatFileSize = (bytes: number) => {
@@ -197,7 +201,14 @@ const PayrollUpload: React.FC = () => {
                                     </div>
                                     <div className="mt-8 flex flex-col gap-3">
                                         <button
-                                            // onClick={() => navigate('/payroll/review')} // TODO: Implement review page
+                                            onClick={() => {
+                                                const batchId = localStorage.getItem('lastUploadedBatchId');
+                                                if (batchId) {
+                                                    navigate(`/payroll/review/${batchId}`);
+                                                } else {
+                                                    alert("Batch ID not found. Please try uploading again.");
+                                                }
+                                            }}
                                             className="w-full py-3.5 px-6 rounded-lg bg-primary text-white font-semibold shadow-lg shadow-primary/20 hover:brightness-110 transition-all active:scale-[0.98]"
                                         >
                                             Continue to Review
