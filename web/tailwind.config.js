@@ -94,13 +94,21 @@ export default {
                 "warning-red-bg": "rgba(127, 29, 29, 0.2)", // Updated for Cancel Batch
                 "warning-red-border": "rgba(153, 27, 27, 0.4)", // Updated for Cancel Batch
                 "obsidian-surface": "#1E1E1E", // Updated for Schedule Batch
+                "neon-cyan": "#00f2ff",
+                "neon-green": "#39ff14",
+                "neon-red": "#ff3131",
+                "card-dark": "#121212",
+                "status-primary": "#0df20d", // Status Page neon green
             },
             boxShadow: {
                 'neon-primary': '0 0 15px rgba(25, 73, 230, 0.4)',
                 'neon-success': '0 0 8px rgba(34, 197, 94, 0.5)',
+                'neon-cyan': '0 0 8px rgba(0, 242, 255, 0.5)',
+                'neon-status': '0 0 15px rgba(13, 242, 13, 0.4)',
             },
             fontFamily: {
-                "display": ["Inter", "sans-serif"]
+                "display": ["Inter", "sans-serif"],
+                "mono-space": ["Space Grotesk", "sans-serif"],
             },
             backgroundImage: {
                 "brand-gradient": "linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #4c1d95 100%)",
