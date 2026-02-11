@@ -1,85 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import BatchListHeader from '../components/BatchListHeader';
 import AdvancedFilterSidebar from '../components/AdvancedFilterSidebar';
+import { getBatches } from '../api/payroll';
 
 const PayrollDashboard: React.FC = () => {
     const navigate = useNavigate();
     const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
+    const [batches, setBatches] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Mock Data for KPI Cards
+    // Mock KPI Data (Calculated from real batches in a real app, keeping static for now or could sum up)
     const stats = [
         { title: 'Monthly Spend', value: '$1,420,500', subtext: '+12.5% from last month', icon: 'trending_up', subtextClass: 'text-emerald-500', glow: false },
-        { title: 'Active Batches', value: '4', subtext: '2 processing, 2 scheduled', icon: 'schedule', subtextClass: 'text-slate-500', glow: false },
+        { title: 'Active Batches', value: batches.filter(b => b.status === 'pending').length.toString(), subtext: 'Pending approval', icon: 'schedule', subtextClass: 'text-slate-500', glow: false },
         { title: 'Next Pay Date', value: 'Oct 31, 2023', subtext: 'End of month cycle', icon: 'calendar_today', subtextClass: 'text-slate-500', glow: false },
         { title: 'Failed Payouts', value: '0', subtext: "Everything's running smooth", icon: 'warning', subtextClass: 'text-emerald-500', iconClass: 'text-red-500/60 group-hover:text-red-500', glow: false },
     ];
 
-    // Mock Data for Table
-    const batches = [
-        {
-            id: 'BAT-2023-094',
-            name: 'Engineering Oct Bonus',
-            date: 'Oct 28, 2023',
-            status: 'Completed',
-            employees: 142,
-            amount: '$452,000.00',
-            wallet: 'Via USD Main Wallet',
-            statusClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 glow-success',
-            statusDot: 'bg-emerald-400',
-            animateDot: true
-        },
-        {
-            id: 'BAT-2023-093',
-            name: 'Global Marketing Payroll',
-            date: 'Oct 27, 2023',
-            status: 'Processing',
-            employees: 89,
-            amount: '$210,400.00',
-            wallet: 'Via EUR/GBP Liquidity',
-            statusClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20 glow-warning',
-            statusDot: 'bg-amber-400',
-            animateDot: false
-        },
-        {
-            id: 'BAT-2023-092',
-            name: 'Executive Quarterly',
-            date: 'Oct 25, 2023',
-            status: 'Completed',
-            employees: 12,
-            amount: '$155,000.00',
-            wallet: 'Via USD High-Yield',
-            statusClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 glow-success',
-            statusDot: 'bg-emerald-400',
-            animateDot: false
-        },
-        {
-            id: 'BAT-2023-091',
-            name: 'Q4 Contractor Payments',
-            date: 'Oct 24, 2023',
-            status: 'Scheduled',
-            employees: 214,
-            amount: '$382,900.00',
-            wallet: 'Multi-currency Batch',
-            statusClass: 'bg-primary/20 text-blue-400 border-primary/30 glow-primary',
-            statusDot: 'bg-blue-400',
-            animateDot: false
-        },
-        {
-            id: 'BAT-2023-090',
-            name: 'Sales Commissions Q3',
-            date: 'Oct 22, 2023',
-            status: 'Failed',
-            employees: 45,
-            amount: '$88,420.00',
-            wallet: 'Insufficient Liquidity',
-            statusClass: 'bg-red-500/10 text-red-400 border-red-500/20',
-            statusDot: 'bg-red-400',
-            animateDot: false
+    useEffect(() => {
+        const fetchBatches = async () => {
+            try {
+                const data = await getBatches();
+                setBatches(data || []);
+            } catch (error) {
+                console.error("Failed to fetch batches:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchBatches();
+    }, []);
+
+    const getStatusClass = (status: string) => {
+        switch (status) {
+            case 'completed': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 glow-success';
+            case 'processing': return 'bg-amber-500/10 text-amber-400 border-amber-500/20 glow-warning';
+            case 'pending': return 'bg-primary/20 text-blue-400 border-primary/30 glow-primary';
+            case 'failed': return 'bg-red-500/10 text-red-400 border-red-500/20';
+            default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
         }
-    ];
+    };
+
+    const getStatusDot = (status: string) => {
+        switch (status) {
+            case 'completed': return 'bg-emerald-400';
+            case 'processing': return 'bg-amber-400';
+            case 'pending': return 'bg-blue-400';
+            case 'failed': return 'bg-red-400';
+            default: return 'bg-slate-400';
+        }
+    };
 
     return (
         <div className="flex h-screen overflow-hidden bg-background-dark font-display text-slate-300 antialiased selection:bg-primary/30">
@@ -123,66 +96,58 @@ const PayrollDashboard: React.FC = () => {
                     </div>
 
                     {/* Table Section */}
-                    {/* Replaced static header with advanced filter header */}
                     <BatchListHeader onOpenFilters={() => setIsFilterSidebarOpen(true)} />
 
                     <div className="bg-surface-dark border border-border-dark rounded-xl overflow-hidden shadow-2xl">
-                        {/* Removed old static header */}
-
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-white/[0.02] text-slate-500 uppercase text-[10px] font-bold tracking-widest border-b border-border-dark">
                                         <th className="px-6 py-4">Batch Details</th>
                                         <th className="px-6 py-4">Status</th>
-                                        <th className="px-6 py-4">Employees</th>
+                                        <th className="px-6 py-4">Status</th>
                                         <th className="px-6 py-4">Total Amount</th>
                                         <th className="px-6 py-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border-dark">
-                                    {batches.map((batch, index) => (
-                                        <tr key={index} className="hover:bg-white/[0.02] transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div>
-                                                    <div className="text-sm font-semibold text-white group-hover:text-primary transition-colors">{batch.name}</div>
-                                                    <div className="text-xs text-slate-500">ID: {batch.id} • {batch.date}</div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${batch.statusClass}`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full mr-2 ${batch.statusDot} ${batch.animateDot ? 'animate-pulse' : ''}`}></span>
-                                                    {batch.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-slate-300">{batch.employees}</td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm font-semibold text-white">{batch.amount}</div>
-                                                <div className="text-[10px] text-slate-500">{batch.wallet}</div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <button className="text-slate-500 hover:text-white transition-colors">
-                                                    <span className="material-icons text-lg">more_horiz</span>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {isLoading ? (
+                                        <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">Loading batches...</td></tr>
+                                    ) : batches.length === 0 ? (
+                                        <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">No batches found. Create one to get started.</td></tr>
+                                    ) : (
+                                        batches.map((batch, index) => (
+                                            <tr key={index} className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => navigate(`/payroll/review/${batch.id}`)}>
+                                                <td className="px-6 py-4">
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-white group-hover:text-primary transition-colors">{batch.description || 'Untitled Batch'}</div>
+                                                        <div className="text-xs text-slate-500">ID: {batch.id.substring(0, 8)} • {new Date(batch.created_at).toLocaleDateString()}</div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusClass(batch.status)}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full mr-2 ${getStatusDot(batch.status)} ${batch.status === 'processing' ? 'animate-pulse' : ''}`}></span>
+                                                        {batch.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-300">{batch.recipient_count} Recipients</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm font-semibold text-white">${batch.total_amount}</div>
+                                                    <div className="text-[10px] text-slate-500">USDC</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button className="text-slate-500 hover:text-white transition-colors" onClick={(e) => { e.stopPropagation(); navigate(`/payroll/review/${batch.id}`); }}>
+                                                        <span className="material-icons text-lg">chevron_right</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
                         <div className="px-6 py-4 border-t border-border-dark flex items-center justify-between bg-white/[0.02]">
-                            <span className="text-xs text-slate-500">Showing 1 to {batches.length} of 248 batches</span>
-                            <div className="flex gap-1">
-                                <button className="p-2 rounded-lg text-slate-500 hover:bg-white/10 transition-colors disabled:opacity-50" disabled>
-                                    <span className="material-icons text-sm">chevron_left</span>
-                                </button>
-                                <button className="w-8 h-8 rounded-lg bg-primary text-white text-xs font-bold">1</button>
-                                <button className="w-8 h-8 rounded-lg text-slate-400 text-xs font-bold hover:bg-white/10 transition-colors">2</button>
-                                <button className="w-8 h-8 rounded-lg text-slate-400 text-xs font-bold hover:bg-white/10 transition-colors">3</button>
-                                <button className="p-2 rounded-lg text-slate-500 hover:bg-white/10 transition-colors">
-                                    <span className="material-icons text-sm">chevron_right</span>
-                                </button>
-                            </div>
+                            <span className="text-xs text-slate-500">Showing {batches.length} batches</span>
                         </div>
                     </div>
 
@@ -227,7 +192,6 @@ const PayrollDashboard: React.FC = () => {
                     </footer>
                 </div>
             </main>
-            {/* Advanced Filter Sidebar */}
             <AdvancedFilterSidebar
                 isOpen={isFilterSidebarOpen}
                 onClose={() => setIsFilterSidebarOpen(false)}
