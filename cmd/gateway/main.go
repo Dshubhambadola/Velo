@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"velo/internal/adapters/http"
+	"velo/internal/adapters/payment/circle"
 	"velo/internal/core/services"
 	"velo/internal/middleware"
 	"velo/pkg/database"
@@ -59,6 +60,29 @@ func main() {
 	{
 		protected.POST("/auth/2fa/generate", authHandler.Generate2FA)
 		protected.POST("/auth/2fa/enable", authHandler.Enable2FA)
+
+		// Payroll Routes
+		payrollService := services.NewPayrollService(database.DB)
+		payrollHandler := http.NewPayrollHandler(payrollService)
+		protected.POST("/payroll/upload", payrollHandler.UploadBatch)
+		protected.POST("/payroll/create", payrollHandler.CreateBatchManual)
+		protected.POST("/payroll/approve/:approval_id", payrollHandler.ApproveBatch)
+		protected.GET("/payroll/batches", payrollHandler.ListBatches)
+		protected.GET("/payroll/batches/:batch_id", payrollHandler.GetBatch)
+		protected.POST("/payroll/batches/:batch_id/execute", payrollHandler.ExecuteBatch)
+
+		// Wallet Routes
+		circleAdapter := circle.NewCircleAdapter("api_key", true) // Replace with actual config
+		walletHandler := http.NewWalletHandler(circleAdapter)
+		protected.POST("/wallet", walletHandler.CreateWallet)
+		protected.GET("/wallet/:wallet_id", walletHandler.GetBalance)
+
+		// Onboarding Routes
+		onboardingService := services.NewOnboardingService(database.DB)
+		onboardingHandler := http.NewOnboardingHandler(onboardingService)
+		protected.POST("/onboarding/company", onboardingHandler.UpdateCompany)
+		protected.POST("/onboarding/kyc", onboardingHandler.UpdateKYC)
+		protected.POST("/onboarding/complete", onboardingHandler.CompleteOnboarding)
 	}
 
 	// Start Server

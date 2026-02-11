@@ -3,6 +3,7 @@ package http
 import (
 	"net/http"
 
+	"velo/internal/core"
 	"velo/internal/core/services"
 
 	"github.com/gin-gonic/gin"
@@ -66,4 +67,82 @@ func (h *PayrollHandler) ApproveBatch(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Batch approved"})
+}
+
+// ListBatches returns all batches for the authenticated company
+func (h *PayrollHandler) ListBatches(c *gin.Context) {
+	companyID := c.MustGet("company_id").(uuid.UUID)
+
+	batches, err := h.Service.ListBatches(companyID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, batches)
+}
+
+// GetBatch returns details of a specific batch
+func (h *PayrollHandler) GetBatch(c *gin.Context) {
+	batchIDStr := c.Param("batch_id")
+	batchID, err := uuid.Parse(batchIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid batch id"})
+		return
+	}
+
+	batch, err := h.Service.GetBatchDetails(batchID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, batch)
+}
+
+// CreateBatchRequest defines the payload for manual batch creation
+type CreateBatchRequest struct {
+	Description string         `json:"description"`
+	Payments    []core.Payment `json:"payments"`
+}
+
+// CreateBatchManual handles manual batch creation via JSON
+func (h *PayrollHandler) CreateBatchManual(c *gin.Context) {
+	var req CreateBatchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	companyID := c.MustGet("company_id").(uuid.UUID)
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	batch, err := h.Service.CreateBatch(c.Request.Context(), companyID, userID, req.Payments, req.Description)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message":  "Batch created successfully",
+		"batch_id": batch.ID,
+		"status":   batch.Status,
+	})
+}
+
+// ExecuteBatch triggers batch processing
+func (h *PayrollHandler) ExecuteBatch(c *gin.Context) {
+	batchIDStr := c.Param("batch_id")
+	batchID, err := uuid.Parse(batchIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid batch id"})
+		return
+	}
+
+	if err := h.Service.ExecuteBatch(c.Request.Context(), batchID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Batch execution started"})
 }
