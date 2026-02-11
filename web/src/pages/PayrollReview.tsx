@@ -1,20 +1,45 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getBatch } from '../api/payroll';
 
 const PayrollReview: React.FC = () => {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
     const [filter, setFilter] = useState<'all' | 'issues'>('all');
+    const [batch, setBatch] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Mock Data
-    const records = [
-        { id: 'EMP-9022', name: 'Alexander Wright', gross: '$8,500.00', tax: '$1,720.00', net: '$6,780.00', status: 'valid', message: 'Valid' },
-        { id: 'EMP-2104', name: 'Sarah Jenkins', gross: '$12,400.00', tax: '$--.00', net: '$12,400.00', status: 'critical', message: 'Missing tax calculation rule' },
-        { id: 'EMP-8831', name: 'Marcus Thorne', gross: '$5,200.00', tax: '$1,040.00', net: '$4,160.00', status: 'warning', message: 'Possible duplicate found in Batch #112' },
-        { id: 'EMP-4451', name: 'Elena Rodriguez', gross: '$7,150.00', tax: '$1,430.00', net: '$5,720.00', status: 'valid', message: 'Valid' },
-        { id: 'EMP-3310', name: 'David Beckham', gross: '$6,200.00', tax: '$1,240.00', net: '$4,960.00', status: 'valid', message: 'Valid' },
-    ];
+    useEffect(() => {
+        const fetchBatch = async () => {
+            if (!id) return;
+            try {
+                const data = await getBatch(id);
+                setBatch(data);
+            } catch (error) {
+                console.error("Failed to fetch batch:", error);
+                alert("Failed to load batch details");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchBatch();
+    }, [id]);
 
-    const filteredRecords = filter === 'all' ? records : records.filter(r => r.status !== 'valid');
+    const handleConfirm = () => {
+        if (!id) return;
+        navigate(`/payroll/confirm/${id}`); // Assuming confirmation page also needs ID
+    };
+
+    if (isLoading) {
+        return <div className="text-white text-center p-10">Loading Batch Details...</div>;
+    }
+
+    if (!batch) {
+        return <div className="text-white text-center p-10">Batch not found.</div>;
+    }
+
+    const records = batch.Patterns || []; // Assuming 'Patterns' holds the payments
+    const filteredRecords = filter === 'all' ? records : records.filter((r: any) => r.status !== 'pending' && r.status !== 'valid'); // Adjust based on real status
 
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display antialiased">
@@ -39,15 +64,15 @@ const PayrollReview: React.FC = () => {
                         <div>
                             <h1 className="text-sm font-semibold tracking-tight uppercase text-slate-400">Payroll Batch Validation</h1>
                             <div className="flex items-center gap-2">
-                                <span className="text-lg font-bold text-white">Q3_Bonus_Run_Final.csv</span>
-                                <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/10 uppercase tracking-widest">Processing</span>
+                                <span className="text-lg font-bold text-white">{batch.description || 'Untitled Batch'}</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/10 uppercase tracking-widest">{batch.status}</span>
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-6">
                         <div className="text-right">
-                            <p className="text-xs text-slate-500">Last scanned</p>
-                            <p className="text-sm font-medium">Today at 14:32:10</p>
+                            <p className="text-xs text-slate-500">Created At</p>
+                            <p className="text-sm font-medium">{new Date(batch.created_at).toLocaleString()}</p>
                         </div>
                         <button className="p-2 text-slate-400 hover:text-white transition-colors">
                             <span className="material-icons">settings</span>
@@ -67,7 +92,7 @@ const PayrollReview: React.FC = () => {
                             <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Total Records</span>
                             <span className="material-icons text-primary/60 text-lg">list_alt</span>
                         </div>
-                        <div className="text-3xl font-bold text-white">1,240</div>
+                        <div className="text-3xl font-bold text-white">{batch.recipient_count}</div>
                         <div className="mt-2 text-[11px] text-slate-500">Full batch file size: 2.4MB</div>
                     </div>
                     <div className="bg-charcoal border border-border-muted p-5 rounded-xl status-card-glow-green">
@@ -75,8 +100,8 @@ const PayrollReview: React.FC = () => {
                             <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Valid</span>
                             <span className="material-icons text-emerald-500 text-lg">check_circle</span>
                         </div>
-                        <div className="text-3xl font-bold text-white">1,223</div>
-                        <div className="mt-2 text-[11px] text-emerald-500/80">98.6% Accuracy rating</div>
+                        <div className="text-3xl font-bold text-white">{batch.recipient_count}</div>
+                        <div className="mt-2 text-[11px] text-emerald-500/80">100% Accuracy rating (Mock)</div>
                     </div>
                     <div className="bg-charcoal border border-border-muted p-5 rounded-xl status-card-glow-red relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-3xl rounded-full -mr-12 -mt-12"></div>
@@ -84,7 +109,7 @@ const PayrollReview: React.FC = () => {
                             <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Critical Errors</span>
                             <span className="material-icons text-red-500 text-lg">error_outline</span>
                         </div>
-                        <div className="text-3xl font-bold text-white">12</div>
+                        <div className="text-3xl font-bold text-white">0</div>
                         <div className="mt-2 text-[11px] text-red-400">Requires manual correction</div>
                     </div>
                     <div className="bg-charcoal border border-border-muted p-5 rounded-xl status-card-glow-blue">
@@ -92,7 +117,7 @@ const PayrollReview: React.FC = () => {
                             <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Warnings</span>
                             <span className="material-icons text-amber-500 text-lg">warning_amber</span>
                         </div>
-                        <div className="text-3xl font-bold text-white">05</div>
+                        <div className="text-3xl font-bold text-white">0</div>
                         <div className="mt-2 text-[11px] text-amber-400/80">Potential duplicates found</div>
                     </div>
                 </div>
@@ -112,7 +137,7 @@ const PayrollReview: React.FC = () => {
                                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${filter === 'issues' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-white'}`}
                             >
                                 Issues
-                                <span className="bg-red-600 text-[10px] text-white px-1.5 py-0.5 rounded-full">17</span>
+                                <span className="bg-red-600 text-[10px] text-white px-1.5 py-0.5 rounded-full">0</span>
                             </button>
                         </div>
                         <div className="flex items-center gap-3">
@@ -133,52 +158,28 @@ const PayrollReview: React.FC = () => {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 border-b border-border-muted">
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Employee ID</th>
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Full Name</th>
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Gross Pay</th>
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Tax Deduct</th>
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Net Pay</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Transaction ID</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Wallet Address</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Amount</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Currency</th>
                                         <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Status</th>
                                         <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border-muted">
-                                    {filteredRecords.map((record, index) => (
-                                        <tr key={index} className={`transition-colors group ${record.status === 'critical' ? 'bg-red-500/[0.02] hover:bg-red-500/[0.04] error-row-glow' : 'hover:bg-white/[0.02]'}`}>
-                                            <td className={`px-6 py-4 font-mono text-sm ${record.status === 'critical' ? 'text-red-400' : 'text-slate-300'}`}>{record.id}</td>
-                                            <td className="px-6 py-4 text-sm font-medium text-white">{record.name}</td>
-                                            <td className={`px-6 py-4 text-sm font-mono ${record.status === 'critical' ? 'text-red-400' : 'text-slate-300'}`}>{record.gross}</td>
-                                            <td className={`px-6 py-4 text-sm font-mono ${record.status === 'critical' ? 'text-red-400' : 'text-slate-300'}`}>{record.tax}</td>
-                                            <td className={`px-6 py-4 text-sm font-mono ${record.status === 'critical' ? 'text-red-400' : 'text-white'}`}>{record.net}</td>
+                                    {filteredRecords.map((record: any, index: number) => (
+                                        <tr key={index} className={`transition-colors group hover:bg-white/[0.02]`}>
+                                            <td className={`px-6 py-4 font-mono text-sm text-slate-300`}>{record.ID.substring(0, 8)}...</td>
+                                            <td className="px-6 py-4 text-sm font-medium text-white font-mono">{record.WalletAddr}</td>
+                                            <td className={`px-6 py-4 text-sm font-mono text-slate-300`}>{record.Amount}</td>
+                                            <td className={`px-6 py-4 text-sm font-mono text-slate-300`}>{record.Currency}</td>
                                             <td className="px-6 py-4">
-                                                {record.status === 'valid' && (
-                                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase">
-                                                        <span className="w-1 h-1 rounded-full bg-emerald-500"></span> Valid
-                                                    </span>
-                                                )}
-                                                {record.status === 'critical' && (
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/20 text-red-500 text-[10px] font-bold uppercase w-fit">
-                                                            <span className="w-1 h-1 rounded-full bg-red-500"></span> Critical
-                                                        </span>
-                                                        <span className="text-[10px] text-red-400 font-medium">{record.message}</span>
-                                                    </div>
-                                                )}
-                                                {record.status === 'warning' && (
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase w-fit">
-                                                            <span className="w-1 h-1 rounded-full bg-amber-500"></span> Warning
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-400">{record.message}</span>
-                                                    </div>
-                                                )}
+                                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase">
+                                                    <span className="w-1 h-1 rounded-full bg-emerald-500"></span> {record.Status}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                {record.status === 'critical' ? (
-                                                    <button className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1 rounded text-xs font-bold transition-all">Fix</button>
-                                                ) : (
-                                                    <button className="text-slate-500 hover:text-white transition-colors"><span className="material-icons text-lg">edit</span></button>
-                                                )}
+                                                <button className="text-slate-500 hover:text-white transition-colors"><span className="material-icons text-lg">edit</span></button>
                                             </td>
                                         </tr>
                                     ))}
@@ -186,15 +187,7 @@ const PayrollReview: React.FC = () => {
                             </table>
                         </div>
                         <div className="px-6 py-4 bg-white/5 border-t border-border-muted flex items-center justify-between">
-                            <span className="text-xs text-slate-400 uppercase font-medium">Page 1 of 62</span>
-                            <div className="flex gap-2">
-                                <button className="p-1 rounded hover:bg-white/10 text-slate-500 disabled:opacity-30" disabled>
-                                    <span className="material-icons">chevron_left</span>
-                                </button>
-                                <button className="p-1 rounded hover:bg-white/10 text-slate-200">
-                                    <span className="material-icons">chevron_right</span>
-                                </button>
-                            </div>
+                            <span className="text-xs text-slate-400 uppercase font-medium">Page 1 of 1</span>
                         </div>
                     </div>
                 </div>
@@ -204,14 +197,13 @@ const PayrollReview: React.FC = () => {
             <div className="fixed bottom-0 inset-x-0 bg-charcoal border-t border-border-muted z-40">
                 {/* Multi-tone Progress Bar */}
                 <div className="h-1 w-full flex">
-                    <div className="h-full bg-emerald-500" style={{ width: '98.6%' }}></div>
-                    <div className="h-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" style={{ width: '1.4%' }}></div>
+                    <div className="h-full bg-emerald-500" style={{ width: '100%' }}></div>
                 </div>
                 <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-6">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Batch Value</span>
-                            <span className="text-lg font-bold text-white tabular-nums">$1,452,380.00</span>
+                            <span className="text-lg font-bold text-white tabular-nums">${batch.total_amount}</span>
                         </div>
                         <div className="h-10 w-px bg-border-muted"></div>
                         <div className="flex items-center gap-2">
@@ -227,14 +219,12 @@ const PayrollReview: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/payroll/upload')} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-slate-300 hover:text-white border border-border-muted hover:bg-white/5 transition-all">
+                        <button onClick={() => navigate('/payroll')} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-slate-300 hover:text-white border border-border-muted hover:bg-white/5 transition-all">
                             Discard Batch
                         </button>
                         <div className="relative">
-                            {/* Notification dot for remaining issues */}
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 border-2 border-charcoal rounded-full z-10"></div>
                             <button
-                                onClick={() => navigate('/payroll/confirm')}
+                                onClick={handleConfirm}
                                 className="bg-primary hover:bg-blue-600 text-white px-8 py-2.5 rounded-lg text-sm font-bold transition-all shadow-xl shadow-primary/20 flex items-center gap-2 group"
                             >
                                 Confirm & Continue
