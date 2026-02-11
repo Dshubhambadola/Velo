@@ -84,6 +84,9 @@ export default {
                 "obsidian-silver": "#A0A0A0", // Updated for Payroll Success
                 "surface-dark": "#121212", // Updated for Batch Detail
                 "border-dark-obsidian": "#1f1f1f", // Updated for Batch Detail
+                "obsidian-lighter": "#1e1e1e", // Updated for Activity Log
+                "obsidian-text-primary": "#FFFFFF", // Updated for Activity Log
+                "obsidian-text-secondary": "#A0A0A0", // Updated for Activity Log
             },
             fontFamily: {
                 "display": ["Inter", "sans-serif"]
