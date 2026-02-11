@@ -87,6 +87,17 @@ export default {
                 "obsidian-lighter": "#1e1e1e", // Updated for Activity Log
                 "obsidian-text-primary": "#FFFFFF", // Updated for Activity Log
                 "obsidian-text-secondary": "#A0A0A0", // Updated for Activity Log
+                "error-deep": "#8B0000", // Updated for Failed Txn
+                "error-bg": "#1A0505", // Updated for Failed Txn
+                "primary-red": "#ec1313", // Updated for Delete Batch
+                "primary-yellow": "#f4c025", // Updated for Cancel Batch
+                "warning-red-bg": "rgba(127, 29, 29, 0.2)", // Updated for Cancel Batch
+                "warning-red-border": "rgba(153, 27, 27, 0.4)", // Updated for Cancel Batch
+                "obsidian-surface": "#1E1E1E", // Updated for Schedule Batch
+            },
+            boxShadow: {
+                'neon-primary': '0 0 15px rgba(25, 73, 230, 0.4)',
+                'neon-success': '0 0 8px rgba(34, 197, 94, 0.5)',
             },
             fontFamily: {
                 "display": ["Inter", "sans-serif"]

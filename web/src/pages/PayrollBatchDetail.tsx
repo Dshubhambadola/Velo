@@ -1,15 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import TransactionDetailModal from '../components/TransactionDetailModal';
+import DuplicateBatchModal from '../components/DuplicateBatchModal';
+import DeleteBatchModal from '../components/DeleteBatchModal';
+import ExportBatchModal from '../components/ExportBatchModal';
+import ScheduleBatchModal from '../components/ScheduleBatchModal';
+import CancelBatchModal from '../components/CancelBatchModal';
+import RetryPaymentsModal from '../components/RetryPaymentsModal';
 
 const PayrollBatchDetail: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const [activeTab, setActiveTab] = useState<'payments' | 'activity'>('payments');
+    const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+
+    // Modal States
+    const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [isRetryModalOpen, setIsRetryModalOpen] = useState(false);
 
     // Mock Data for Payments
     const transactions = [
         { id: '1', name: 'Acme Logistics Corp', type: 'Vendor Payment', initials: 'AL', color: 'primary', account: 'US88 9201 2281 9901', amount: '45,200.00', status: 'COMPLETED', ref: 'TXN-9021-X99' },
-        { id: '2', name: 'Global Holdings Inc', type: 'Dividends', initials: 'GH', color: 'purple', account: 'GB41 BARC 4001 0291', amount: '12,850.50', status: 'COMPLETED', ref: 'TXN-4412-Z01' },
+        { id: '2', name: 'Global Holdings Inc', type: 'Dividends', initials: 'GH', color: 'purple', account: 'GB41 BARC 4001 0291', amount: '12,850.50', status: 'FAILED', ref: 'TXN-4412-Z01' }, // Changed to FAILED for testing
         { id: '3', name: 'Nexus Property Group', type: 'Commercial Lease', initials: 'NP', color: 'orange', account: 'US12 7721 0092 5511', amount: '210,000.00', status: 'PENDING', ref: 'TXN-8822-M44' },
         { id: '4', name: 'Stellar Tech Sol.', type: 'Cloud Infrastructure', initials: 'ST', color: 'blue', account: 'DE81 COMM 0991 1233', amount: '8,440.00', status: 'COMPLETED', ref: 'TXN-1102-S22' },
         { id: '5', name: 'Riverstone Venture', type: 'Cap Call', initials: 'RV', color: 'pink', account: 'KY12 BONY 5510 0022', amount: '500,000.00', status: 'COMPLETED', ref: 'TXN-3392-L19' },
@@ -54,15 +70,23 @@ const PayrollBatchDetail: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button className="px-4 py-2 border border-border-dark-obsidian rounded-lg text-sm font-medium hover:bg-white/5 text-silver-grey hover:text-white transition-colors flex items-center gap-2">
-                                <span className="material-icons text-sm">download</span>
-                                Export
+                            <button onClick={() => setIsExportModalOpen(true)} className="w-10 h-10 rounded-lg bg-surface-dark border border-border-dark-obsidian flex items-center justify-center text-silver-grey hover:text-white hover:bg-white/[0.05] transition-colors" title="Export Batch">
+                                <span className="material-icons text-xl">ios_share</span>
                             </button>
-                            <button
-                                onClick={() => navigate('/payroll/new')}
-                                className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-lg shadow-primary/20 transition-all"
-                            >
-                                Actions
+                            <button onClick={() => setIsDuplicateModalOpen(true)} className="w-10 h-10 rounded-lg bg-surface-dark border border-border-dark-obsidian flex items-center justify-center text-silver-grey hover:text-white hover:bg-white/[0.05] transition-colors" title="Duplicate Batch">
+                                <span className="material-icons text-xl">content_copy</span>
+                            </button>
+                            <button onClick={() => setIsScheduleModalOpen(true)} className="w-10 h-10 rounded-lg bg-surface-dark border border-border-dark-obsidian flex items-center justify-center text-silver-grey hover:text-white hover:bg-white/[0.05] transition-colors" title="Schedule Execution">
+                                <span className="material-icons text-xl">schedule</span>
+                            </button>
+                            <button onClick={() => setIsRetryModalOpen(true)} className="w-10 h-10 rounded-lg bg-surface-dark border border-border-dark-obsidian flex items-center justify-center text-silver-grey hover:text-white hover:bg-white/[0.05] transition-colors" title="Retry Failed Payments">
+                                <span className="material-icons text-xl">refresh</span>
+                            </button>
+                            <button onClick={() => setIsCancelModalOpen(true)} className="w-10 h-10 rounded-lg bg-surface-dark border border-border-dark-obsidian flex items-center justify-center text-silver-grey hover:text-white hover:bg-white/[0.05] transition-colors" title="Cancel Execution">
+                                <span className="material-icons text-xl">block</span>
+                            </button>
+                            <button onClick={() => setIsDeleteModalOpen(true)} className="w-10 h-10 rounded-lg bg-surface-dark border border-border-dark-obsidian flex items-center justify-center text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete Batch">
+                                <span className="material-icons text-xl">delete_outline</span>
                             </button>
                         </div>
                     </div>
@@ -336,6 +360,48 @@ const PayrollBatchDetail: React.FC = () => {
                     )}
                 </div>
             </main>
+
+            <TransactionDetailModal
+                isOpen={!!selectedTransaction}
+                onClose={() => setSelectedTransaction(null)}
+                transaction={selectedTransaction}
+            />
+
+            <DuplicateBatchModal
+                isOpen={isDuplicateModalOpen}
+                onClose={() => setIsDuplicateModalOpen(false)}
+                currentBatchName="January 2026 Payroll"
+                recipientCount={45}
+                totalAmount="67,500.00"
+            />
+
+            <DeleteBatchModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                batchName="January 2026 Payroll"
+                recipientCount={45}
+                totalAmount="67,500.00"
+            />
+
+            <ExportBatchModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+            />
+
+            <ScheduleBatchModal
+                isOpen={isScheduleModalOpen}
+                onClose={() => setIsScheduleModalOpen(false)}
+            />
+
+            <CancelBatchModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+            />
+
+            <RetryPaymentsModal
+                isOpen={isRetryModalOpen}
+                onClose={() => setIsRetryModalOpen(false)}
+            />
         </div>
     );
 };
