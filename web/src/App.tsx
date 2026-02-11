@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
+import ActivityFeed from './pages/ActivityFeed';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import NotificationsPage from './pages/NotificationsPage';
 import PayrollDashboard from './pages/PayrollDashboard';
 import PayrollNewBatch from './pages/PayrollNewBatch';
 import PayrollUpload from './pages/PayrollUpload';
@@ -46,6 +49,11 @@ import PayrollSuccess from './pages/PayrollSuccess';
 import PayrollBatchDetail from './pages/PayrollBatchDetail';
 import MagicLinkSuccess from './pages/MagicLinkSuccess';
 import BatchValidationFailed from './pages/BatchValidationFailed';
+import OnboardingHome from './pages/OnboardingHome';
+import WalletEmptyState from './pages/WalletEmptyState';
+import TeamInvitation from './pages/TeamInvitation';
+import AccessRestricted from './pages/AccessRestricted';
+import StatusPage from './pages/StatusPage';
 
 function App() {
     return (
@@ -53,6 +61,9 @@ function App() {
             <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/activity" element={<ActivityFeed />} />
+                <Route path="/analytics" element={<AnalyticsDashboard />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/payroll" element={<PayrollDashboard />} />
                 <Route path="/payroll/new" element={<PayrollNewBatch />} />
                 <Route path="/payroll/upload" element={<PayrollUpload />} />
@@ -98,6 +109,11 @@ function App() {
                 <Route path="/magic-link" element={<MagicLinkRequest />} />
                 <Route path="/magic-link-sent" element={<MagicLinkSent />} />
                 <Route path="/magic-link-success" element={<MagicLinkSuccess />} />
+                <Route path="/onboarding/home" element={<OnboardingHome />} />
+                <Route path="/wallet/empty" element={<WalletEmptyState />} />
+                <Route path="/team/invite" element={<TeamInvitation />} />
+                <Route path="/403" element={<AccessRestricted />} />
+                <Route path="/status" element={<StatusPage />} />
             </Routes>
         </Router>
     );
