@@ -118,7 +118,7 @@ export default function Login() {
             <div className="mt-8 text-center">
                 <p className="text-silver-grey/60 text-sm">
                     Don't have an account?
-                    <Link to="/signup" className="text-silver-grey font-bold hover:underline ml-1">Create an account</Link>
+                    <Link to="/register" className="text-silver-grey font-bold hover:underline ml-1">Create an account</Link>
                 </p>
             </div>
             <div className="mt-12 flex items-center gap-4 opacity-40 grayscale transition-all cursor-default">
