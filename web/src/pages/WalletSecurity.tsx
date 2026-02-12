@@ -1,7 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import { getSecurityLogs } from '../api/wallet';
 
 const WalletSecurity: React.FC = () => {
+    const [logs, setLogs] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadLogs();
+    }, []);
+
+    const loadLogs = async () => {
+        try {
+            setLoading(true);
+            const data = await getSecurityLogs();
+            setLogs(data);
+            setError(null);
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load security logs');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleString();
+    };
+
+    const getStatusColor = (status: string) => {
+        if (status === 'success' || status === 'verified') return 'text-green-500 bg-green-500/20 border-green-500/30';
+        if (status === 'failed' || status === 'flagged') return 'text-[#ffaa00] bg-[#ffaa00]/20 border-[#ffaa00]/30';
+        return 'text-[#00f3ff] bg-[#00f3ff]/20 border-[#00f3ff]/30';
+    };
+
     return (
         <div className="flex min-h-screen bg-black font-display text-white selection:bg-[#f90606]/30">
             <Sidebar />
@@ -43,7 +76,7 @@ const WalletSecurity: React.FC = () => {
                     <div className="flex items-center gap-6">
                         <div className="text-right hidden sm:block">
                             <div className="text-[10px] font-mono text-[#a0a0a0] uppercase tracking-tighter">System Clock (UTC)</div>
-                            <div className="text-sm font-mono font-bold">2023-11-24 14:42:09</div>
+                            <div className="text-sm font-mono font-bold">{new Date().toISOString().replace('T', ' ').substring(0, 19)}</div>
                         </div>
                         <div className="flex items-center gap-3 bg-white/5 p-1 rounded-full px-3">
                             <div className="w-2 h-2 rounded-full bg-[#00f3ff] shadow-[0_0_15px_rgba(0,243,255,0.3)]"></div>
@@ -224,50 +257,45 @@ const WalletSecurity: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left font-mono">
-                                        <thead>
-                                            <tr className="bg-black/40 text-[#a0a0a0] text-[10px] uppercase tracking-widest border-b border-white/5">
-                                                <th className="px-6 py-3 font-medium">Timestamp</th>
-                                                <th className="px-6 py-3 font-medium">Event Type</th>
-                                                <th className="px-6 py-3 font-medium">Origin IP</th>
-                                                <th className="px-6 py-3 font-medium">Transaction Hash</th>
-                                                <th className="px-6 py-3 font-medium">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-white/5 text-[11px]">
-                                            <tr className="hover:bg-white/5 transition-colors group">
-                                                <td className="px-6 py-4 text-[#a0a0a0]">2023-11-24 14:41:02</td>
-                                                <td className="px-6 py-4 font-bold text-[#ffaa00]">LOGIN_ATTEMPT_FAIL</td>
-                                                <td className="px-6 py-4">157.240.22.35</td>
-                                                <td className="px-6 py-4 text-[#a0a0a0]">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</td>
-                                                <td className="px-6 py-4"><span className="bg-[#ffaa00]/20 text-[#ffaa00] px-2 py-0.5 rounded-full border border-[#ffaa00]/30">FLAGGED</span></td>
-                                            </tr>
-                                            <tr className="hover:bg-white/5 transition-colors group">
-                                                <td className="px-6 py-4 text-[#a0a0a0]">2023-11-24 14:38:55</td>
-                                                <td className="px-6 py-4 font-bold">CONTRACT_EXECUTION</td>
-                                                <td className="px-6 py-4">192.168.1.104</td>
-                                                <td className="px-6 py-4 text-[#a0a0a0]">0x2a21e78Cc6634C0532925a3b844Bc454e4438f99a</td>
-                                                <td className="px-6 py-4"><span className="bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full border border-green-500/30">VERIFIED</span></td>
-                                            </tr>
-                                            <tr className="hover:bg-white/5 transition-colors group">
-                                                <td className="px-6 py-4 text-[#a0a0a0]">2023-11-24 14:35:12</td>
-                                                <td className="px-6 py-4 font-bold">WALLET_AUTH_SUCCESS</td>
-                                                <td className="px-6 py-4">45.79.182.21</td>
-                                                <td className="px-6 py-4 text-[#a0a0a0]">0xbf9935Cc6634C0532925a3b844Bc454e4438f2a1</td>
-                                                <td className="px-6 py-4"><span className="bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full border border-green-500/30">VERIFIED</span></td>
-                                            </tr>
-                                            <tr className="hover:bg-white/5 transition-colors group">
-                                                <td className="px-6 py-4 text-[#a0a0a0]">2023-11-24 14:32:01</td>
-                                                <td className="px-6 py-4 font-bold">API_KEY_ROTATION</td>
-                                                <td className="px-6 py-4">SYSTEM_AUTO</td>
-                                                <td className="px-6 py-4 text-[#a0a0a0]">---</td>
-                                                <td className="px-6 py-4"><span className="bg-[#00f3ff]/20 text-[#00f3ff] px-2 py-0.5 rounded-full border border-[#00f3ff]/30">COMPLETED</span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    {loading ? (
+                                        <div className="flex items-center justify-center p-8">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00f3ff]"></div>
+                                        </div>
+                                    ) : logs.length === 0 ? (
+                                        <div className="flex items-center justify-center p-8 text-[#a0a0a0]">
+                                            No security logs found.
+                                        </div>
+                                    ) : (
+                                        <table className="w-full text-left font-mono">
+                                            <thead>
+                                                <tr className="bg-black/40 text-[#a0a0a0] text-[10px] uppercase tracking-widest border-b border-white/5">
+                                                    <th className="px-6 py-3 font-medium">Timestamp</th>
+                                                    <th className="px-6 py-3 font-medium">Event Type</th>
+                                                    <th className="px-6 py-3 font-medium">Origin IP</th>
+                                                    <th className="px-6 py-3 font-medium">User Agent</th>
+                                                    <th className="px-6 py-3 font-medium">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5 text-[11px]">
+                                                {logs.map((log) => (
+                                                    <tr key={log.id} className="hover:bg-white/5 transition-colors group">
+                                                        <td className="px-6 py-4 text-[#a0a0a0]">{formatDate(log.created_at)}</td>
+                                                        <td className="px-6 py-4 font-bold">{log.event_type}</td>
+                                                        <td className="px-6 py-4 text-[#a0a0a0]">{log.ip_address}</td>
+                                                        <td className="px-6 py-4 text-[#a0a0a0] truncate max-w-xs" title={log.user_agent}>{log.user_agent}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-2 py-0.5 rounded-full border ${getStatusColor(log.status)} uppercase`}>
+                                                                {log.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
                                 </div>
                                 <div className="px-6 py-3 border-t border-white/5 bg-black/40 flex justify-between items-center text-[10px] text-[#a0a0a0]">
-                                    <span>Showing 4 of 2,841 critical events</span>
+                                    <span>Showing {logs.length} recent events</span>
                                     <div className="flex gap-2">
                                         <button className="px-2 py-1 bg-white/5 rounded hover:bg-white/10 transition-all">PREVIOUS</button>
                                         <button className="px-2 py-1 bg-white/5 rounded hover:bg-white/10 transition-all text-white">NEXT</button>

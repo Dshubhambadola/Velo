@@ -1,7 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import { getBalance } from '../api/wallet';
 
 const MultiNetworkWallet: React.FC = () => {
+    const [balanceData, setBalanceData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchBalance = async () => {
+            try {
+                const data = await getBalance();
+                setBalanceData(data);
+            } catch (error) {
+                console.error("Failed to fetch balance", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBalance();
+    }, []);
+
+    const totalBalance = balanceData?.balance ? parseFloat(balanceData.balance).toLocaleString(undefined, { minimumFractionDigits: 2 }) : '---';
+    const currency = balanceData?.currency || 'USD';
+
     return (
         <div className="flex min-h-screen bg-black text-white font-display">
             <Sidebar />
@@ -11,7 +32,11 @@ const MultiNetworkWallet: React.FC = () => {
                         <h1 className="text-[32px] font-bold tracking-tight text-white">Multi-Network Wallet</h1>
                         <div className="flex items-center gap-3">
                             <span className="text-[#A0A0A0] font-medium">Total Balance</span>
-                            <span className="text-2xl font-semibold text-white">$125,450.23 <span className="text-sm font-normal text-[#A0A0A0]">USDC</span></span>
+                            {loading ? (
+                                <div className="h-8 w-32 bg-[#262626] animate-pulse rounded"></div>
+                            ) : (
+                                <span className="text-2xl font-semibold text-white">${totalBalance} <span className="text-sm font-normal text-[#A0A0A0]">{currency}</span></span>
+                            )}
                         </div>
                     </div>
                     <button className="flex items-center justify-center gap-2 bg-[#25f46a] hover:brightness-110 text-black px-6 py-3 rounded-lg font-bold transition-all shadow-[0_0_15px_rgba(37,244,106,0.3)]">

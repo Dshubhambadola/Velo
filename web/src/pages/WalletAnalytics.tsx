@@ -1,7 +1,58 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import { getAnalytics } from '../api/wallet';
 
 const WalletAnalytics: React.FC = () => {
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadAnalytics();
+    }, []);
+
+    const loadAnalytics = async () => {
+        try {
+            setLoading(true);
+            const analyticsData = await getAnalytics();
+            setData(analyticsData);
+            setError(null);
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load analytics data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen bg-black text-white font-display">
+                <Sidebar />
+                <main className="flex-1 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0657f9]"></div>
+                </main>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex min-h-screen bg-black text-white font-display">
+                <Sidebar />
+                <main className="flex-1 flex flex-col items-center justify-center">
+                    <p className="text-red-400 mb-4">{error}</p>
+                    <button
+                        onClick={loadAnalytics}
+                        className="px-4 py-2 bg-[#0657f9] rounded-lg hover:bg-[#0657f9]/80 transition-colors"
+                    >
+                        Retry
+                    </button>
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div className="flex min-h-screen bg-black text-white font-display">
             <style>{`
@@ -61,7 +112,7 @@ const WalletAnalytics: React.FC = () => {
                             </div>
                             <p className="text-[#A0A0A0] text-sm font-medium uppercase tracking-wider mb-2">Total Spend</p>
                             <div className="flex items-end gap-3">
-                                <h3 className="text-3xl font-bold">$1,284,592.00</h3>
+                                <h3 className="text-3xl font-bold">${data?.total_spend?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                                 <span className="text-emerald-400 text-sm font-medium mb-1 flex items-center">
                                     <span className="material-icons text-xs">arrow_upward</span> 12.5%
                                 </span>
@@ -76,7 +127,7 @@ const WalletAnalytics: React.FC = () => {
                             </div>
                             <p className="text-[#A0A0A0] text-sm font-medium uppercase tracking-wider mb-2">Network Fees</p>
                             <div className="flex items-end gap-3">
-                                <h3 className="text-3xl font-bold">$42,901.45</h3>
+                                <h3 className="text-3xl font-bold">${data?.network_fees?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                                 <span className="text-red-400 text-sm font-medium mb-1 flex items-center">
                                     <span className="material-icons text-xs">arrow_upward</span> 4.2%
                                 </span>
@@ -91,7 +142,7 @@ const WalletAnalytics: React.FC = () => {
                             </div>
                             <p className="text-[#A0A0A0] text-sm font-medium uppercase tracking-wider mb-2">Active Wallets</p>
                             <div className="flex items-end gap-3">
-                                <h3 className="text-3xl font-bold">842</h3>
+                                <h3 className="text-3xl font-bold">{data?.active_wallets}</h3>
                                 <span className="text-emerald-400 text-sm font-medium mb-1 flex items-center">
                                     <span className="material-icons text-xs">arrow_upward</span> 8 new
                                 </span>

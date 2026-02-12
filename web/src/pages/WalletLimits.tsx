@@ -1,7 +1,82 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import { getLimits, updateLimits } from '../api/wallet';
 
 const WalletLimits: React.FC = () => {
+    const [limits, setLimits] = useState<any>({
+        daily_limit: 50000.00,
+        monthly_limit: 500000.00,
+        transaction_limit: 10000.00,
+        requires_approval: true,
+        approval_threshold: 1000.00,
+    });
+    // Mock usage data for now
+    const [usage] = useState({
+        daily_used: 12000.00,
+        daily_percentage: 24,
+    });
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadLimits();
+    }, []);
+
+    const loadLimits = async () => {
+        try {
+            setLoading(true);
+            const data = await getLimits();
+            // Merge with defaults if fields missing
+            setLimits((prev: any) => ({ ...prev, ...data }));
+            setError(null);
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load limits');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSave = async (updatedFields: any = {}) => {
+        try {
+            setSaving(true);
+            const newLimits = { ...limits, ...updatedFields };
+            const updated = await updateLimits(newLimits);
+            setLimits(updated);
+            setSuccessMessage('Limits updated successfully');
+            setTimeout(() => setSuccessMessage(null), 3000);
+        } catch (err) {
+            console.error(err);
+            setError('Failed to update limits');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setLimits({ ...limits, approval_threshold: parseFloat(e.target.value) });
+    };
+
+    const handleToggleApproval = () => {
+        const newVal = !limits.requires_approval;
+        setLimits({ ...limits, requires_approval: newVal });
+        // Auto-save on toggle? Or wait for save button. UI has "Save Controls".
+    };
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen bg-black text-white font-display">
+                <Sidebar />
+                <main className="flex-1 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1E40AF]"></div>
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div className="flex min-h-screen bg-black text-white font-display">
             <Sidebar />
@@ -21,6 +96,18 @@ const WalletLimits: React.FC = () => {
                         <button className="pb-4 text-[#A1A1AA] font-medium hover:text-white transition-colors">Team Access</button>
                     </div>
                 </div>
+
+                {error && (
+                    <div className="mb-6 p-4 bg-red-900/20 border border-red-500/50 rounded-lg text-red-200">
+                        {error}
+                    </div>
+                )}
+                {successMessage && (
+                    <div className="fixed top-6 right-6 p-4 bg-green-900/20 border border-green-500/50 rounded-lg text-green-200 z-50 animate-fade-in-down">
+                        {successMessage}
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
                     <section className="bg-[#121212] border border-[#262626] rounded-xl p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-8">
@@ -36,16 +123,16 @@ const WalletLimits: React.FC = () => {
                             <div className="relative w-48 h-48">
                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                     <circle className="text-black" cx="50" cy="50" fill="transparent" r="42" stroke="currentColor" strokeWidth="8"></circle>
-                                    <circle className="drop-shadow-[0_0_5px_rgba(30,64,175,0.8)]" cx="50" cy="50" fill="transparent" r="42" stroke="#1E40AF" strokeDasharray="263.89" strokeDashoffset="200.55" strokeLinecap="round" strokeWidth="8"></circle>
+                                    <circle className="drop-shadow-[0_0_5px_rgba(30,64,175,0.8)]" cx="50" cy="50" fill="transparent" r="42" stroke="#1E40AF" strokeDasharray={`${usage.daily_percentage * 2.64} 264`} strokeLinecap="round" strokeWidth="8"></circle>
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-3xl font-extrabold text-white">24%</span>
+                                    <span className="text-3xl font-extrabold text-white">{usage.daily_percentage}%</span>
                                     <span className="text-xs uppercase tracking-wider text-[#A1A1AA] font-bold">Used</span>
                                 </div>
                             </div>
                             <div className="mt-8 text-center">
-                                <p className="text-2xl font-bold tabular-nums text-white">$12,000.00</p>
-                                <p className="text-sm text-[#A1A1AA]">of $50,000.00 daily limit used</p>
+                                <p className="text-2xl font-bold tabular-nums text-white">${usage.daily_used.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                <p className="text-sm text-[#A1A1AA]">of ${limits.daily_limit?.toLocaleString(undefined, { minimumFractionDigits: 2 })} daily limit used</p>
                             </div>
                         </div>
                         <div className="mt-6 pt-6 border-t border-[#262626] flex items-center gap-3">
@@ -63,10 +150,18 @@ const WalletLimits: React.FC = () => {
                                 <div className="flex justify-between items-end mb-4">
                                     <label className="text-sm font-bold text-white">Auto-approval threshold</label>
                                     <div className="bg-black px-3 py-1 rounded border border-[#262626]">
-                                        <span className="text-[#1E40AF] font-bold tabular-nums">$1,000</span>
+                                        <span className="text-[#1E40AF] font-bold tabular-nums">${limits.approval_threshold}</span>
                                     </div>
                                 </div>
-                                <input className="w-full h-2 bg-black rounded-lg appearance-none cursor-pointer accent-[#1E40AF]" max="10000" min="0" step="100" type="range" defaultValue="1000" />
+                                <input
+                                    className="w-full h-2 bg-black rounded-lg appearance-none cursor-pointer accent-[#1E40AF]"
+                                    max="10000"
+                                    min="0"
+                                    step="100"
+                                    type="range"
+                                    value={limits.approval_threshold}
+                                    onChange={handleThresholdChange}
+                                />
                                 <div className="flex justify-between mt-2 text-[10px] text-[#A1A1AA] uppercase font-bold tracking-widest">
                                     <span>$0</span>
                                     <span>$5,000</span>
@@ -87,16 +182,23 @@ const WalletLimits: React.FC = () => {
                                             <p className="text-xs text-[#A1A1AA]">Requires 2 admins for withdrawals &gt; $25k</p>
                                         </div>
                                     </div>
-                                    <div className="relative inline-flex items-center cursor-pointer">
-                                        <div className="w-11 h-6 bg-[#1E40AF] rounded-full"></div>
-                                        <div className="absolute left-6 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                                    <div
+                                        className="relative inline-flex items-center cursor-pointer"
+                                        onClick={handleToggleApproval}
+                                    >
+                                        <div className={`w-11 h-6 rounded-full transition-colors ${limits.requires_approval ? 'bg-[#1E40AF]' : 'bg-zinc-700'}`}></div>
+                                        <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${limits.requires_approval ? 'translate-x-5' : ''}`}></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div className="mt-auto pt-6">
-                            <button className="w-full py-3 bg-black hover:bg-zinc-900 text-[#A1A1AA] rounded-lg text-sm font-bold transition-all border border-[#262626]">
-                                Save Controls
+                            <button
+                                onClick={() => handleSave()}
+                                disabled={saving}
+                                className="w-full py-3 bg-black hover:bg-zinc-900 text-[#A1A1AA] rounded-lg text-sm font-bold transition-all border border-[#262626]"
+                            >
+                                {saving ? 'Saving...' : 'Save Controls'}
                             </button>
                         </div>
                     </section>
