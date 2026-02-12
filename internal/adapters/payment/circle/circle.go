@@ -146,6 +146,58 @@ func (c *CircleAdapter) GetBalance(ctx context.Context, walletID string) (*ports
 	}, nil
 }
 
+func (c *CircleAdapter) GetTransactions(ctx context.Context, walletID string) ([]ports.Transaction, error) {
+	// Endpoint for transfers might be /v1/transfers?walletIds=[walletID]
+	// For MVP simplicity, let's assume we fetch transfers
+	endpoint := fmt.Sprintf("/v1/transfers?walletIds=%s", walletID)
+	resp, err := c.makeRequest(ctx, "GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result struct {
+		Data []struct {
+			ID     string `json:"id"`
+			Amount struct {
+				Amount   string `json:"amount"`
+				Currency string `json:"currency"`
+			} `json:"amount"`
+			Status          string `json:"status"`
+			TransactionHash string `json:"transactionHash"`
+			Source          struct {
+				Type string `json:"type"`
+				ID   string `json:"id"`
+			} `json:"source"`
+			Destination struct {
+				Type    string `json:"type"`
+				Address string `json:"address"`
+			} `json:"destination"`
+			CreateDate time.Time `json:"createDate"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(resp, &result); err != nil {
+		return nil, err
+	}
+
+	var transactions []ports.Transaction
+	for _, t := range result.Data {
+		transactions = append(transactions, ports.Transaction{
+			ID:              t.ID,
+			Amount:          t.Amount.Amount,
+			Currency:        t.Amount.Currency,
+			Status:          t.Status,
+			TransactionHash: t.TransactionHash,
+			FromAddress:     t.Source.ID, // Simplified
+			ToAddress:       t.Destination.Address,
+			Timestamp:       t.CreateDate,
+			Type:            "transfer", // Simplified
+		})
+	}
+
+	return transactions, nil
+}
+
 func (c *CircleAdapter) Name() string {
 	return "circle"
 }

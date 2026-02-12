@@ -15,6 +15,9 @@ type PaymentProvider interface {
 	// Get wallet balance
 	GetBalance(ctx context.Context, walletID string) (*Balance, error)
 
+	// Get transactions
+	GetTransactions(ctx context.Context, walletID string) ([]Transaction, error)
+
 	// Provider name (for logging/monitoring)
 	Name() string
 }
