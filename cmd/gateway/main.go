@@ -72,10 +72,29 @@ func main() {
 		protected.POST("/payroll/batches/:batch_id/execute", payrollHandler.ExecuteBatch)
 
 		// Wallet Routes
-		circleAdapter := circle.NewCircleAdapter("api_key", true) // Replace with actual config
-		walletHandler := http.NewWalletHandler(circleAdapter)
+		circleAdapter := circle.NewCircleAdapter(os.Getenv("CIRCLE_API_KEY"), os.Getenv("CIRCLE_SANDBOX") == "true")
+		walletService := services.NewWalletService(database.DB, circleAdapter)
+		walletHandler := http.NewWalletHandler(walletService)
+
 		protected.POST("/wallet", walletHandler.CreateWallet)
-		protected.GET("/wallet/:wallet_id", walletHandler.GetBalance)
+		protected.GET("/wallet/balance", walletHandler.GetBalance) // Changed from :wallet_id to use auth context
+		protected.GET("/wallet/transactions", walletHandler.GetTransactions)
+
+		// Wallet Settings & Limits
+		protected.GET("/wallet/settings", walletHandler.GetSettings)
+		protected.PUT("/wallet/settings", walletHandler.UpdateSettings)
+		protected.GET("/wallet/limits", walletHandler.GetLimits)
+		protected.PUT("/wallet/limits", walletHandler.UpdateLimits)
+
+		// Address Book
+		protected.GET("/wallet/contacts", walletHandler.GetContacts)
+		protected.POST("/wallet/contacts", walletHandler.AddContact)
+
+		// Security
+		protected.GET("/wallet/security", walletHandler.GetSecurityLogs)
+
+		// Analytics
+		protected.GET("/wallet/analytics", walletHandler.GetAnalytics)
 
 		// Onboarding Routes
 		onboardingService := services.NewOnboardingService(database.DB)
