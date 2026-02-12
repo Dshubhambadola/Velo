@@ -6,6 +6,7 @@ import (
 
 	"velo/internal/adapters/http"
 	"velo/internal/adapters/payment/circle"
+	"velo/internal/core/services"
 	"velo/internal/middleware"
 	"velo/pkg/database"
 
@@ -21,12 +22,16 @@ func main() {
 	// Connect Redis
 	database.ConnectRedis()
 
+	// Connect Postgres
+	database.ConnectPostgres()
+
 	// Initialize Provider
 	apiKey := os.Getenv("CIRCLE_API_KEY")
 	sandbox := os.Getenv("CIRCLE_SANDBOX") == "true"
 
 	provider := circle.NewCircleAdapter(apiKey, sandbox)
-	handler := http.NewWalletHandler(provider)
+	service := services.NewWalletService(database.DB, provider)
+	handler := http.NewWalletHandler(service)
 
 	// Initialize Router
 	r := gin.Default()
