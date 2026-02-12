@@ -28,6 +28,50 @@ const Sidebar: React.FC = () => {
                 </Link>
 
                 <Link
+                    to="/analytics"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/analytics')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/analytics') ? 'text-primary' : ''}`}>bar_chart</span>
+                    <span className="text-sm font-medium">Analytics</span>
+                </Link>
+
+                <Link
+                    to="/history"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/history')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/history') ? 'text-primary' : ''}`}>history</span>
+                    <span className="text-sm font-medium">History</span>
+                </Link>
+
+                <Link
+                    to="/security"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/security')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/security') ? 'text-primary' : ''}`}>security</span>
+                    <span className="text-sm font-medium">Security</span>
+                </Link>
+
+                <Link
+                    to="/contacts"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/contacts')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/contacts') ? 'text-primary' : ''}`}>contacts</span>
+                    <span className="text-sm font-medium">Contacts</span>
+                </Link>
+
+                <Link
                     to="/payroll"
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/payroll')
                         ? 'text-white bg-primary/10 border border-primary/20'

@@ -54,6 +54,15 @@ import WalletEmptyState from './pages/WalletEmptyState';
 import TeamInvitation from './pages/TeamInvitation';
 import AccessRestricted from './pages/AccessRestricted';
 import StatusPage from './pages/StatusPage';
+import WalletDashboard from './pages/WalletDashboard';
+import WalletSettings from './pages/WalletSettings';
+import WalletLimits from './pages/WalletLimits';
+import MultiNetworkWallet from './pages/MultiNetworkWallet';
+import CrossNetworkBridge from './pages/CrossNetworkBridge';
+import TransactionHistory from './pages/TransactionHistory';
+import WalletSecurity from './pages/WalletSecurity';
+import AddressBook from './pages/AddressBook';
+import WalletAnalytics from './pages/WalletAnalytics';
 
 function App() {
     return (
@@ -76,6 +85,7 @@ function App() {
                 <Route path="/payroll/validation-failed" element={<BatchValidationFailed />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/signup" element={<Register />} />
                 <Route path="/verify-email" element={<EmailVerification />} />
                 <Route path="/onboarding/step1" element={<OnboardingStep1 />} />
                 <Route path="/onboarding/step2" element={<OnboardingStep2 />} />
@@ -114,6 +124,15 @@ function App() {
                 <Route path="/team/invite" element={<TeamInvitation />} />
                 <Route path="/403" element={<AccessRestricted />} />
                 <Route path="/status" element={<StatusPage />} />
+                <Route path="/wallets" element={<WalletDashboard />} />
+                <Route path="/settings" element={<WalletSettings />} />
+                <Route path="/settings/limits" element={<WalletLimits />} />
+                <Route path="/wallets/networks" element={<MultiNetworkWallet />} />
+                <Route path="/bridge" element={<CrossNetworkBridge />} />
+                <Route path="/history" element={<TransactionHistory />} />
+                <Route path="/security" element={<WalletSecurity />} />
+                <Route path="/contacts" element={<AddressBook />} />
+                <Route path="/analytics" element={<WalletAnalytics />} />
             </Routes>
         </Router>
     );
