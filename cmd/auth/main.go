@@ -61,6 +61,21 @@ func main() {
 	{
 		protected.POST("/auth/2fa/generate", authHandler.Generate2FA)
 		protected.POST("/auth/2fa/enable", authHandler.Enable2FA)
+
+		// Team Management
+		teamService := services.NewTeamService(database.DB)
+		teamHandler := http.NewTeamHandler(teamService)
+		protected.GET("/team/members", teamHandler.ListMembers)
+		protected.POST("/team/invite", teamHandler.InviteMember)
+		protected.PUT("/team/members/:id/role", teamHandler.UpdateMemberRole)
+		protected.DELETE("/team/members/:id", teamHandler.RemoveMember)
+
+		// RBAC
+		rbacService := services.NewRBACService(database.DB)
+		rbacHandler := http.NewRBACHandler(rbacService)
+		protected.GET("/roles", rbacHandler.ListRoles)
+		protected.POST("/roles", rbacHandler.CreateRole)
+		protected.GET("/permissions", rbacHandler.ListPermissions)
 	}
 
 	// Health Check
