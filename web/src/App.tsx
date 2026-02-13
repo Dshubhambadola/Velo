@@ -64,6 +64,10 @@ import WalletSecurity from './pages/WalletSecurity';
 import AddressBook from './pages/AddressBook';
 import WalletAnalytics from './pages/WalletAnalytics';
 
+import TeamManagement from './pages/TeamManagement';
+import RolesOverview from './pages/RolesOverview';
+import CreateRole from './pages/CreateRole';
+
 function App() {
     return (
         <Router>
@@ -121,7 +125,9 @@ function App() {
                 <Route path="/magic-link-success" element={<MagicLinkSuccess />} />
                 <Route path="/onboarding/home" element={<OnboardingHome />} />
                 <Route path="/wallet/empty" element={<WalletEmptyState />} />
-                <Route path="/team/invite" element={<TeamInvitation />} />
+                <Route path="/employees/invite" element={<TeamInvitation />} />
+                <Route path="/settings/roles" element={<RolesOverview />} />
+                <Route path="/settings/roles/create" element={<CreateRole />} />
                 <Route path="/403" element={<AccessRestricted />} />
                 <Route path="/status" element={<StatusPage />} />
                 <Route path="/wallets" element={<WalletDashboard />} />
@@ -133,6 +139,7 @@ function App() {
                 <Route path="/security" element={<WalletSecurity />} />
                 <Route path="/contacts" element={<AddressBook />} />
                 <Route path="/analytics" element={<WalletAnalytics />} />
+                <Route path="/employees" element={<TeamManagement />} />
             </Routes>
         </Router>
     );

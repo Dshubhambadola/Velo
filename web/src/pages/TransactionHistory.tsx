@@ -27,7 +27,7 @@ const TransactionHistory: React.FC = () => {
     };
 
     const mapTransactionToUI = (tx: any) => {
-        const isReceive = tx.to_address === "MY_WALLET_ADDRESS"; // In real app check against user wallet
+        // const isReceive = tx.to_address === "MY_WALLET_ADDRESS"; // In real app check against user wallet
         // For MVP we don't know my address here easily without context, let's assume 'transfer' type direction based on logic or just generic
 
         let type = 'Transaction';

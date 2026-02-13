@@ -5,7 +5,7 @@ import { getContacts, addContact } from '../api/wallet';
 const AddressBook: React.FC = () => {
     const [contacts, setContacts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    // const [error, setError] = useState<string | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
     // New Contact State
@@ -26,10 +26,10 @@ const AddressBook: React.FC = () => {
             setLoading(true);
             const data = await getContacts();
             setContacts(data);
-            setError(null);
+            // setError(null);
         } catch (err) {
             console.error(err);
-            setError('Failed to load contacts');
+            // setError('Failed to load contacts');
         } finally {
             setLoading(false);
         }

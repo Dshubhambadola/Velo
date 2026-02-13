@@ -5,7 +5,7 @@ import { getSecurityLogs } from '../api/wallet';
 const WalletSecurity: React.FC = () => {
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    // const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadLogs();
@@ -16,10 +16,10 @@ const WalletSecurity: React.FC = () => {
             setLoading(true);
             const data = await getSecurityLogs();
             setLogs(data);
-            setError(null);
+            // setError(null);
         } catch (err) {
             console.error(err);
-            setError('Failed to load security logs');
+            // setError('Failed to load security logs');
         } finally {
             setLoading(false);
         }
