@@ -108,10 +108,22 @@ export default function Login() {
                         {loading ? 'Signing in...' : 'Sign in'}
                     </button>
                 </form>
-                <div className="mt-8 pt-8 border-t border-obsidian-border">
-                    <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-obsidian-border rounded-lg text-sm font-medium text-silver-grey hover:bg-white/5 transition-colors">
-                        <img alt="" className="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmaSng3w5CQEDy9wS9DvPYtDwSLq_JhDDverTy_2fxLWc1abK0XZOgaNG4ULPdyAflyLr6hrFNWkL9w5IGPlKh0EmPkW0kETENw6yQAjaxE47Cn6E5JneeN7ZU4d-7J1aiHVLaaLdXKFgeg_KbKMm4F2jItqeL_iDzOpA-evKi3N-m1gLRoC8pdsMSWCpmj9cwUKqxgfREfVkS1nQGwCdvXnCPf0LM4EKAOoo2GQFaHQ5DVQR7UEtNqUvFHbBEECLxJzoJ-waB09FM" />
-                        Sign in with SSO
+                <div className="mt-8 pt-8 border-t border-obsidian-border space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => alert("SSO with Google is not yet configured in this demo environment.")}
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-obsidian-border rounded-lg text-sm font-medium text-silver-grey hover:bg-white/5 transition-colors group"
+                    >
+                        <img alt="Google" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" src="https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOh8Sb3VSgIBrfRYvW6cUA" />
+                        Sign in with Google
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => alert("SSO with Microsoft is not yet configured in this demo environment.")}
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-obsidian-border rounded-lg text-sm font-medium text-silver-grey hover:bg-white/5 transition-colors group"
+                    >
+                        <img alt="Microsoft" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" />
+                        Sign in with Microsoft
                     </button>
                 </div>
             </main>
