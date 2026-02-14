@@ -223,3 +223,34 @@ func (h *AuthHandler) Verify2FA(c *gin.Context) {
 		"token": token,
 	})
 }
+
+// SSO Handlers
+
+func (h *AuthHandler) InitiateSSO(c *gin.Context) {
+	provider := c.Param("provider")
+	url, err := h.Service.InitiateSSO(provider)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"redirect_url": url})
+}
+
+func (h *AuthHandler) SSOCallback(c *gin.Context) {
+	code := c.Query("code")
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing code"})
+		return
+	}
+
+	token, err := h.Service.HandleSSOCallback(code)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	// In a real app, we might redirect to frontend with token in query param or cookie
+	// For this API-centric approach, we return JSON
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}

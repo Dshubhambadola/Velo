@@ -53,6 +53,10 @@ func main() {
 		auth.POST("/magic-link", authHandler.RequestMagicLink)
 		auth.POST("/magic-login", authHandler.LoginWithMagicLink)
 		auth.POST("/2fa/verify", authHandler.Verify2FA)
+
+		// SSO
+		auth.GET("/sso/:provider/initiate", authHandler.InitiateSSO)
+		auth.GET("/sso/callback", authHandler.SSOCallback)
 	}
 
 	// Protected Routes

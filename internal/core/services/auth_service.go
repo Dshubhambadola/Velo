@@ -258,3 +258,40 @@ func (s *AuthService) Verify2FA(userID, code string) (string, error) {
 
 	return auth.GenerateToken(user.ID, user.CompanyID, user.Email, roles)
 }
+
+// SSO Placeholders
+
+func (s *AuthService) InitiateSSO(provider string) (string, error) {
+	// Mock URL based on provider
+	// In reality, this would construct the OAuth2 URL
+	if provider != "google" && provider != "microsoft" {
+		return "", errors.New("unsupported provider")
+	}
+
+	// Return a dummy URL that the frontend redirects to
+	// For placeholder, maybe we just return a success message or a specific code
+	// But to simulate, let's return a fake auth URL
+	return "https://accounts.google.com/o/oauth2/v2/auth?client_id=mock_client_id&redirect_uri=http://localhost:8080/auth/sso/callback&response_type=code&scope=email profile", nil
+}
+
+func (s *AuthService) HandleSSOCallback(code string) (string, error) {
+	// Mock callback handling
+	// In reality, exchange code for token, get user info, find/create user, generate JWT
+	if code == "mock_code" {
+		// Simulate successful login for a demo user
+		// In a real app, we would look up the user by email from the provider
+		var user core.User
+		if err := s.DB.Preload("UserRoles.Role").First(&user).Error; err != nil {
+			return "", errors.New("no users found to mock login with")
+		}
+
+		// Generate JWT
+		var roles []string
+		for _, ur := range user.UserRoles {
+			roles = append(roles, ur.Role.Name)
+		}
+
+		return auth.GenerateToken(user.ID, user.CompanyID, user.Email, roles)
+	}
+	return "", errors.New("invalid sso code")
+}
