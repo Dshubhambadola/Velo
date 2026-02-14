@@ -156,15 +156,23 @@ const PayrollDashboard: React.FC = () => {
                         <div className="lg:col-span-2 bg-surface-dark border border-border-dark rounded-xl p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <h4 className="font-semibold text-white">Batch Performance Trend</h4>
-                                <select className="bg-transparent border-none text-xs text-slate-400 focus:ring-0 cursor-pointer outline-none">
+                                <select
+                                    className="bg-transparent border-none text-xs text-slate-400 focus:ring-0 cursor-pointer outline-none hover:text-white transition-colors"
+                                    defaultValue="Last 6 months"
+                                >
                                     <option>Last 6 months</option>
                                     <option>Last Year</option>
+                                    <option>All Time</option>
                                 </select>
                             </div>
                             <div className="h-48 w-full bg-gradient-to-t from-primary/5 to-transparent flex items-end justify-between px-2 gap-2">
                                 {/* Simple Bar Chart Representation */}
                                 {[40, 60, 45, 75, 90, 100].map((height, i) => (
-                                    <div key={i} className={`w-full rounded-t-sm transition-all ${i === 5 ? 'bg-primary' : 'bg-primary/20 hover:bg-primary/40'}`} style={{ height: `${height}%` }}></div>
+                                    <div key={i} className={`w-full rounded-t-sm transition-all group relative ${i === 5 ? 'bg-primary' : 'bg-primary/20 hover:bg-primary/40'}`} style={{ height: `${height}%` }}>
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-2 py-1 rounded hidden group-hover:block whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {['$42k', '$61k', '$48k', '$78k', '$92k', '$105k'][i]}
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                             <div className="flex justify-between mt-4 text-[10px] text-slate-600 font-bold uppercase tracking-wider">
@@ -177,7 +185,12 @@ const PayrollDashboard: React.FC = () => {
                             </div>
                             <h4 className="font-bold text-white mb-2">Auto-Pay Active</h4>
                             <p className="text-sm text-slate-500 mb-6">Next automated batch for <span className="text-white">General Payroll</span> will trigger in 3 days.</p>
-                            <button className="w-full py-2.5 rounded-lg border border-primary/40 text-primary text-xs font-bold hover:bg-primary/10 transition-all">Configure Settings</button>
+                            <button
+                                onClick={() => navigate('/settings/payroll')}
+                                className="w-full py-2.5 rounded-lg border border-primary/40 text-primary text-xs font-bold hover:bg-primary/10 transition-all"
+                            >
+                                Configure Settings
+                            </button>
                         </div>
                     </div>
 

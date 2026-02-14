@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import WalletBalanceCard from '../components/WalletBalanceCard';
 import AdvancedFilterSidebar from '../components/AdvancedFilterSidebar';
@@ -51,6 +52,8 @@ const Dashboard: React.FC = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
+    const [selectedTimeframe, setSelectedTimeframe] = useState('30D');
+
     return (
         <div className="flex h-screen overflow-hidden bg-black font-display text-white">
             <Sidebar />
@@ -75,10 +78,18 @@ const Dashboard: React.FC = () => {
                         <div className="relative">
                             <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
                             <input
-                                className="bg-black/50 border border-border-dark-obsidian text-sm rounded-lg pl-10 pr-4 py-1.5 w-64 focus:outline-none focus:border-primary transition-all text-slate-300 placeholder-slate-600"
-                                placeholder="Search transactions, users..."
+                                className="bg-black/50 border border-border-dark-obsidian text-sm rounded-lg pl-10 pr-10 py-1.5 w-64 focus:outline-none focus:border-primary transition-all text-slate-300 placeholder-slate-600"
+                                placeholder="Search (CMD+K)..."
                                 type="text"
+                                onClick={() => setIsQuickActionsOpen(true)}
+                                readOnly // Using as trigger for modal for now
                             />
+                            <button
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                                onClick={() => setIsQuickActionsOpen(true)}
+                            >
+                                <span className="material-icons text-sm">keyboard_command_key</span>
+                            </button>
                         </div>
                         <div className="h-6 w-[1px] bg-border-dark-obsidian"></div>
                         <div className="flex items-center gap-2">
@@ -92,7 +103,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <NotificationDropdown />
-                        <div className="flex items-center gap-3 pl-4 border-l border-border-dark-obsidian">
+                        <Link to="/settings" className="flex items-center gap-3 pl-4 border-l border-border-dark-obsidian hover:bg-white/5 p-2 rounded-lg transition-colors">
                             <div className="text-right hidden md:block">
                                 <p className="text-xs font-semibold text-white">Alex Vanguard</p>
                                 <p className="text-[10px] text-slate-500">Tier 4 Admin</p>
@@ -102,7 +113,7 @@ const Dashboard: React.FC = () => {
                                 alt="User Profile"
                                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCz6fIo0PxGnzyY-NUKwnGAQmCNlX_RsFsT3QTb0noWhXL0qbCOuD9oPHQ0ZT9rU1bHFP2X-Q8W7gdXUlzJkCQJoOAC-Umtiwgu1PKJcGWKywHtf1JsZ22p3qCa1SmhTRVXJzd95UCCR5AfRT-XEINijYs2UCzgV2DcL5tjjfo049qjHAsK84gj_PXpwPjKR6tQ1eV5l0aNdiLvMI_1o2we_uuxbrvdoy0viZunXWo72vpq8AFH3U_ub0k77UaDlNekUYs9klGsAMXB"
                             />
-                        </div>
+                        </Link>
                     </div>
                 </header>
 
@@ -114,7 +125,7 @@ const Dashboard: React.FC = () => {
                         <WalletBalanceCard balance={balance} loading={isLoadingBalance} />
 
                         {/* Pending Transactions */}
-                        <div className="bg-obsidian-charcoal border border-border-dark-obsidian p-6 rounded-xl group hover:border-slate-700 transition-colors flex flex-col justify-between">
+                        <Link to="/history" className="bg-obsidian-charcoal border border-border-dark-obsidian p-6 rounded-xl group hover:border-slate-700 transition-colors flex flex-col justify-between cursor-pointer">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <p className="text-xs font-medium text-slate-500 uppercase tracking-widest mb-1">Pending Volume</p>
@@ -128,10 +139,10 @@ const Dashboard: React.FC = () => {
                                 <span className="text-white text-xs font-bold">42 Transactions</span>
                                 <span className="text-[10px] text-slate-500">Processing now</span>
                             </div>
-                        </div>
+                        </Link>
 
                         {/* Success Rate */}
-                        <div className="bg-obsidian-charcoal border border-border-dark-obsidian p-6 rounded-xl group hover:border-slate-700 transition-colors flex flex-col justify-between">
+                        <Link to="/analytics" className="bg-obsidian-charcoal border border-border-dark-obsidian p-6 rounded-xl group hover:border-slate-700 transition-colors flex flex-col justify-between cursor-pointer">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <p className="text-xs font-medium text-slate-500 uppercase tracking-widest mb-1">Success Rate</p>
@@ -145,7 +156,7 @@ const Dashboard: React.FC = () => {
                                 <span className="text-white text-xs font-bold">Near Zero Failure</span>
                                 <span className="text-[10px] text-slate-500">Global average: 94.2%</span>
                             </div>
-                        </div>
+                        </Link>
                     </section>
 
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -157,9 +168,18 @@ const Dashboard: React.FC = () => {
                                     <p className="text-sm text-slate-500">Daily aggregate processing volume across all channels</p>
                                 </div>
                                 <div className="flex gap-2 bg-black rounded-lg p-1 border border-border-dark-obsidian">
-                                    <button className="px-3 py-1 text-[11px] font-bold text-white bg-slate-800 rounded shadow-sm">30D</button>
-                                    <button className="px-3 py-1 text-[11px] font-bold text-slate-500 hover:text-white transition-colors">90D</button>
-                                    <button className="px-3 py-1 text-[11px] font-bold text-slate-500 hover:text-white transition-colors">1Y</button>
+                                    {['30D', '90D', '1Y'].map((tf) => (
+                                        <button
+                                            key={tf}
+                                            onClick={() => setSelectedTimeframe(tf)}
+                                            className={`px-3 py-1 text-[11px] font-bold rounded shadow-sm transition-colors ${selectedTimeframe === tf
+                                                ? 'text-white bg-slate-800'
+                                                : 'text-slate-500 hover:text-white'
+                                                }`}
+                                        >
+                                            {tf}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 

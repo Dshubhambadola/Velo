@@ -102,6 +102,35 @@ func main() {
 		protected.POST("/onboarding/company", onboardingHandler.UpdateCompany)
 		protected.POST("/onboarding/kyc", onboardingHandler.UpdateKYC)
 		protected.POST("/onboarding/complete", onboardingHandler.CompleteOnboarding)
+
+		// Activity Feed
+		activityService := services.NewActivityService(database.DB)
+		activityHandler := http.NewActivityHandler(activityService)
+		protected.GET("/activity", activityHandler.ListActivities)
+
+		// Notifications
+		notificationService := services.NewNotificationService(database.DB)
+		notificationHandler := http.NewNotificationHandler(notificationService)
+		protected.GET("/notifications", notificationHandler.ListNotifications)
+		protected.POST("/notifications/:id/read", notificationHandler.MarkAsRead)
+		protected.POST("/notifications/read-all", notificationHandler.MarkAllAsRead)
+
+		// Analytics
+		analyticsService := services.NewAnalyticsService(database.DB)
+		analyticsHandler := http.NewAnalyticsHandler(analyticsService)
+		protected.GET("/analytics/overview", analyticsHandler.GetOverview)
+
+		// Bridge
+		bridgeService := services.NewBridgeService(database.DB)
+		bridgeHandler := http.NewBridgeHandler(bridgeService)
+		protected.GET("/bridge/quote", bridgeHandler.GetQuote)
+		protected.POST("/bridge/execute", bridgeHandler.ExecuteBridge)
+
+		// System Status
+		statusService := services.NewSystemStatusService(database.DB)
+		statusHandler := http.NewSystemStatusHandler(statusService)
+		// Public route
+		r.GET("/status", statusHandler.GetStatus)
 	}
 
 	// Start Server

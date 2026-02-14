@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -71,4 +72,17 @@ func RBACMiddleware(db *gorm.DB, resource, action string) gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// GetUserIDFromContext extracts the user ID from the request context
+func GetUserIDFromContext(c *gin.Context) (uuid.UUID, error) {
+	val, exists := c.Get("user_id")
+	if !exists {
+		return uuid.Nil, errors.New("user_id not found in context")
+	}
+	userID, ok := val.(uuid.UUID)
+	if !ok {
+		return uuid.Nil, errors.New("invalid user_id type in context")
+	}
+	return userID, nil
 }

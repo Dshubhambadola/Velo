@@ -25,6 +25,8 @@ func main() {
 		&core.Payment{},
 		&core.PaymentApproval{},
 		&core.Wallet{},
+		&core.Activity{},
+		&core.Notification{},
 	)
 	if err != nil {
 		log.Fatal("Migration failed:", err)

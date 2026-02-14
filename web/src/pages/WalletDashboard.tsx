@@ -19,6 +19,8 @@ const WalletDashboard: React.FC = () => {
         }, 1000);
     }, []);
 
+    const [chartRange, setChartRange] = useState('1W');
+
     return (
         <div className="flex min-h-screen bg-background-dark text-slate-200 font-display selection:bg-primary/30">
             <Sidebar />
@@ -88,9 +90,18 @@ const WalletDashboard: React.FC = () => {
                         <div className="flex items-center justify-between mb-6">
                             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Portfolio Performance</p>
                             <div className="flex gap-2">
-                                <button className="px-3 py-1 text-[10px] font-bold rounded bg-primary/20 text-primary border border-primary/30 uppercase tracking-widest">1D</button>
-                                <button className="px-3 py-1 text-[10px] font-bold rounded hover:bg-white/5 text-slate-500 uppercase tracking-widest">1W</button>
-                                <button className="px-3 py-1 text-[10px] font-bold rounded hover:bg-white/5 text-slate-500 uppercase tracking-widest">1M</button>
+                                {['1D', '1W', '1M', '1Y'].map((range) => (
+                                    <button
+                                        key={range}
+                                        onClick={() => setChartRange(range)}
+                                        className={`px-3 py-1 text-[10px] font-bold rounded uppercase tracking-widest transition-colors ${chartRange === range
+                                                ? 'bg-primary/20 text-primary border border-primary/30'
+                                                : 'hover:bg-white/5 text-slate-500'
+                                            }`}
+                                    >
+                                        {range}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                         <div className="h-48 w-full relative">
@@ -164,7 +175,7 @@ const WalletDashboard: React.FC = () => {
                 <div className="bg-obsidian-grey border border-obsidian-border rounded-xl overflow-hidden">
                     <div className="p-6 border-b border-obsidian-border flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest">Recent Activity</h3>
-                        <a className="text-xs text-primary font-bold hover:underline" href="#">View All</a>
+                        <a className="text-xs text-primary font-bold hover:underline" href="#" onClick={(e) => { e.preventDefault(); alert("Navigating to full history..."); }}>View All</a>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">

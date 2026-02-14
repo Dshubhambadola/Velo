@@ -155,7 +155,10 @@ const TeamManagement: React.FC = () => {
                             <p className="text-xs text-[#A0A0A0]">Level 5 Access</p>
                         </div>
                     </div>
-                    <button className="w-full flex items-center justify-center gap-2 bg-[#1e3fae]/10 hover:bg-[#1e3fae]/20 text-[#1e3fae] py-2 rounded-lg text-sm font-medium transition-all">
+                    <button
+                        onClick={() => { alert("Logging out..."); navigate('/login'); }}
+                        className="w-full flex items-center justify-center gap-2 bg-[#1e3fae]/10 hover:bg-[#1e3fae]/20 text-[#1e3fae] py-2 rounded-lg text-sm font-medium transition-all"
+                    >
                         <span className="material-icons text-sm">logout</span>
                         Terminal Exit
                     </button>
@@ -173,7 +176,10 @@ const TeamManagement: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex gap-3">
-                        <button className="flex items-center gap-2 bg-[#121212] border border-[#2D2D2D] px-4 py-2 rounded-lg text-sm text-white hover:bg-[#2D2D2D] transition-colors">
+                        <button
+                            onClick={() => alert("Exporting PDF report...")}
+                            className="flex items-center gap-2 bg-[#121212] border border-[#2D2D2D] px-4 py-2 rounded-lg text-sm text-white hover:bg-[#2D2D2D] transition-colors"
+                        >
                             <span className="material-icons text-sm">download</span>
                             Export PDF
                         </button>
@@ -305,24 +311,24 @@ const TeamManagement: React.FC = () => {
                                 <span className="text-sm font-medium text-white">Operatives Selected</span>
                             </div>
                             <div className="flex items-center gap-4">
-                                <button className="flex items-center gap-2 hover:text-[#1e3fae] transition-colors text-sm text-[#A0A0A0]">
+                                <button className="flex items-center gap-2 hover:text-[#1e3fae] transition-colors text-sm text-[#A0A0A0]" onClick={() => alert("Change status dialog...")}>
                                     <span className="material-icons text-lg">sync_alt</span>
                                     Change Status
                                 </button>
-                                <button className="flex items-center gap-2 hover:text-[#1e3fae] transition-colors text-sm text-[#A0A0A0]">
+                                <button className="flex items-center gap-2 hover:text-[#1e3fae] transition-colors text-sm text-[#A0A0A0]" onClick={() => alert("Assign team dialog...")}>
                                     <span className="material-icons text-lg">groups</span>
                                     Assign Team
                                 </button>
-                                <button className="flex items-center gap-2 hover:text-[#1e3fae] transition-colors text-sm text-[#A0A0A0]">
+                                <button className="flex items-center gap-2 hover:text-[#1e3fae] transition-colors text-sm text-[#A0A0A0]" onClick={() => alert("Exporting CSV...")}>
                                     <span className="material-icons text-lg">file_download</span>
                                     Export CSV
                                 </button>
-                                <button className="flex items-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded-full text-sm font-bold transition-all">
+                                <button className="flex items-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded-full text-sm font-bold transition-all" onClick={() => alert("Terminating selected users...")}>
                                     <span className="material-icons text-lg">delete_sweep</span>
                                     Terminate
                                 </button>
                                 <button
-                                    onClick={() => setSelectedMembers([])}
+                                    onClick={() => { setSelectedMembers([]); alert("Actions applied!"); }}
                                     className="bg-[#1e3fae] hover:bg-blue-700 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#1e3fae]/30 transition-all"
                                 >
                                     Apply Actions

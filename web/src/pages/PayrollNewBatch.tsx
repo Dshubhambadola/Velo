@@ -61,7 +61,10 @@ const PayrollNewBatch: React.FC = () => {
                         </button>
 
                         {/* Method 3: API Integration */}
-                        <button className="flex flex-col text-left p-6 bg-card-midnight border border-white/10 rounded-xl hover:border-primary/50 transition-all group">
+                        <button
+                            onClick={() => alert("Integration with HRIS systems is coming soon. Please use CSV Upload for now.")}
+                            className="flex flex-col text-left p-6 bg-card-midnight border border-white/10 rounded-xl hover:border-primary/50 transition-all group"
+                        >
                             <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center mb-5 group-hover:bg-white/10 transition-colors">
                                 <span className="material-icons text-silver-grey text-3xl group-hover:text-white transition-colors">hub</span>
                             </div>
@@ -79,13 +82,16 @@ const PayrollNewBatch: React.FC = () => {
                 <div className="px-8 py-6 bg-black/40 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2 text-xs text-silver-grey">
                         <span className="material-icons text-sm text-primary">info</span>
-                        <span>Need help with CSV formatting? <a href="#" className="text-primary hover:underline">Download template</a></span>
+                        <span>Need help with CSV formatting? <button onClick={() => alert("Downloading template...")} className="text-primary hover:underline bg-transparent border-none p-0 cursor-pointer">Download template</button></span>
                     </div>
                     <div className="flex items-center gap-4 w-full sm:w-auto">
                         <button onClick={() => navigate('/payroll')} className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-silver-grey hover:text-white transition-colors">
                             Cancel
                         </button>
-                        <button className="w-full sm:w-auto px-10 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
+                        <button
+                            onClick={() => navigate('/payroll/upload')}
+                            className="w-full sm:w-auto px-10 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                        >
                             Continue
                         </button>
                     </div>
