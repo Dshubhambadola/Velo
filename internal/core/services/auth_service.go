@@ -8,6 +8,7 @@ import (
 	"velo/internal/auth"
 	"velo/internal/core"
 
+	"github.com/google/uuid"
 	"github.com/xlzd/gotp"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -37,8 +38,8 @@ func (s *AuthService) Register(email, password, fullName string) (*core.User, er
 
 	// Create Company (Partition)
 	company := core.Company{
-		Name: fullName + "'s Company", // Default name
-		// Domain can be set later
+		Name:   fullName + "'s Company", // Default name
+		Domain: "temp-" + uuid.New().String() + ".com",
 	}
 	if err := s.DB.Create(&company).Error; err != nil {
 		return nil, err
