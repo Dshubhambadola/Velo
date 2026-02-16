@@ -38,6 +38,7 @@ func (s *AuthService) Register(email, password, fullName string) (*core.User, er
 
 	// Create Company (Partition)
 	company := core.Company{
+		ID:     uuid.New(),
 		Name:   fullName + "'s Company", // Default name
 		Domain: "temp-" + uuid.New().String() + ".com",
 	}
@@ -47,6 +48,7 @@ func (s *AuthService) Register(email, password, fullName string) (*core.User, er
 
 	// Create User
 	user := core.User{
+		ID:           uuid.New(),
 		Email:        email,
 		PasswordHash: string(hashedPassword),
 		FullName:     fullName,
@@ -64,11 +66,12 @@ func (s *AuthService) Register(email, password, fullName string) (*core.User, er
 	// Assuming roles are seeded
 	if err := s.DB.Where("name = ?", "owner").First(&ownerRole).Error; err != nil {
 		// Fallback: Create owner role if not exists (for dev)
-		ownerRole = core.Role{Name: "owner", Description: "Owner", IsSystemRole: true}
+		ownerRole = core.Role{ID: uuid.New(), Name: "owner", Description: "Owner", IsSystemRole: true}
 		s.DB.Create(&ownerRole)
 	}
 
 	userRole := core.UserRole{
+		ID:        uuid.New(),
 		UserID:    user.ID,
 		CompanyID: company.ID,
 		RoleID:    ownerRole.ID,

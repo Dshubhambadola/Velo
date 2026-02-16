@@ -44,6 +44,7 @@ func (s *WalletService) EnsureWallet(ctx context.Context, userID uuid.UUID) (*co
 
 	// Save to DB
 	wallet = core.Wallet{
+		ID:         uuid.New(),
 		UserID:     userID,
 		Provider:   s.provider.Name(),
 		ExternalID: providerWallet.ID,
@@ -63,12 +64,12 @@ func (s *WalletService) EnsureWallet(ctx context.Context, userID uuid.UUID) (*co
 }
 
 func (s *WalletService) createDefaultSettings(userID uuid.UUID) {
-	settings := core.WalletSetting{UserID: userID}
+	settings := core.WalletSetting{ID: uuid.New(), UserID: userID}
 	s.db.Create(&settings)
 }
 
 func (s *WalletService) createDefaultLimits(userID uuid.UUID) {
-	limits := core.WalletLimit{UserID: userID}
+	limits := core.WalletLimit{ID: uuid.New(), UserID: userID}
 	s.db.Create(&limits)
 }
 
@@ -156,6 +157,7 @@ func (s *WalletService) GetContacts(ctx context.Context, userID uuid.UUID) ([]co
 }
 
 func (s *WalletService) AddContact(ctx context.Context, userID uuid.UUID, contact core.AddressBookEntry) (*core.AddressBookEntry, error) {
+	contact.ID = uuid.New()
 	contact.UserID = userID
 	if err := s.db.Create(&contact).Error; err != nil {
 		return nil, err

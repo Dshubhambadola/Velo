@@ -23,15 +23,20 @@ func NewPayrollService(db *gorm.DB) *PayrollService {
 
 // CreateBatch creates a new payroll batch from parsed data
 func (s *PayrollService) CreateBatch(ctx context.Context, companyID, userID uuid.UUID, payments []core.Payment, description string) (*core.PayrollBatch, error) {
+	batchID := uuid.New()
 	totalAmount := decimal.Zero
-	for _, p := range payments {
+	for i, p := range payments {
 		if p.Amount.LessThanOrEqual(decimal.Zero) {
 			return nil, errors.New("invalid payment amount")
 		}
+		// Assign ID and BatchID to payment
+		payments[i].ID = uuid.New()
+		payments[i].BatchID = batchID
 		totalAmount = totalAmount.Add(p.Amount)
 	}
 
 	batch := core.PayrollBatch{
+		ID:             batchID,
 		CompanyID:      companyID,
 		SubmittedBy:    userID,
 		Status:         "pending",
@@ -50,6 +55,7 @@ func (s *PayrollService) CreateBatch(ctx context.Context, companyID, userID uuid
 	limit := decimal.NewFromInt(100000)
 	if totalAmount.GreaterThan(limit) {
 		approval := core.PaymentApproval{
+			ID:          uuid.New(),
 			BatchID:     batch.ID,
 			RequestedBy: userID,
 			Status:      "pending",

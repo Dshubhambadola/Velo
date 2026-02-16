@@ -9,7 +9,7 @@ import (
 
 // PayrollBatch represents a group of payments
 type PayrollBatch struct {
-	ID             uuid.UUID       `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID             uuid.UUID       `gorm:"type:uuid;primaryKey"`
 	CompanyID      uuid.UUID       `gorm:"index;not null"`
 	SubmittedBy    uuid.UUID       `gorm:"index;not null"`
 	Status         string          `gorm:"default:'pending'"` // pending, processing, completed, failed
@@ -25,7 +25,7 @@ type PayrollBatch struct {
 
 // Payment represents a single transaction
 type Payment struct {
-	ID               uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID               uuid.UUID `gorm:"type:uuid;primaryKey"`
 	BatchID          uuid.UUID `gorm:"index;not null"`
 	RecipientName    string
 	RecipientEmail   string
@@ -42,7 +42,7 @@ type Payment struct {
 
 // PaymentApproval handles the workflow for high-value batches
 type PaymentApproval struct {
-	ID          uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
 	BatchID     uuid.UUID `gorm:"uniqueIndex;not null"`
 	RequestedBy uuid.UUID `gorm:"not null"`
 	ApprovedBy  uuid.UUID

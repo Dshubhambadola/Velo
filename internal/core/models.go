@@ -9,7 +9,7 @@ import (
 
 // User represents a system user
 type User struct {
-	ID                  uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID                  uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Email               string    `gorm:"uniqueIndex;not null"`
 	PasswordHash        string    `gorm:"not null"` // Empty for SSO users
 	FullName            string
@@ -52,7 +52,7 @@ type User struct {
 
 // Company represents a tenant
 type Company struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Name      string    `gorm:"not null"`
 	Domain    string    `gorm:"uniqueIndex"`
 	Website   string
@@ -65,7 +65,7 @@ type Company struct {
 
 // Role represents a user role (RBAC)
 type Role struct {
-	ID           uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Name         string    `gorm:"uniqueIndex;not null"` // owner, finance_manager, etc.
 	Description  string
 	IsSystemRole bool `gorm:"default:false"`
@@ -73,7 +73,7 @@ type Role struct {
 
 // Permission represents a specific action on a resource
 type Permission struct {
-	ID          uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Resource    string    `gorm:"not null"` // payroll, wallet, etc.
 	Action      string    `gorm:"not null"` // create, read, execution, etc.
 	Description string
@@ -88,7 +88,7 @@ type RolePermission struct {
 
 // UserRole maps users to roles within a company
 type UserRole struct {
-	ID         uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey"`
 	UserID     uuid.UUID `gorm:"uniqueIndex:idx_user_company_role"`
 	CompanyID  uuid.UUID `gorm:"uniqueIndex:idx_user_company_role"`
 	RoleID     uuid.UUID

@@ -9,7 +9,7 @@ import (
 
 // Wallet represents a user's wallet in the system
 type Wallet struct {
-	ID         uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey"`
 	UserID     uuid.UUID `gorm:"uniqueIndex"`
 	CompanyID  uuid.UUID `gorm:"index"`
 	Provider   string    // circle, stripe, etc.

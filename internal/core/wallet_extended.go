@@ -30,7 +30,7 @@ const (
 
 // Transaction represents a financial transaction
 type Transaction struct {
-	ID              uuid.UUID         `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	ID              uuid.UUID         `gorm:"type:uuid;primaryKey" json:"id"`
 	WalletID        uuid.UUID         `gorm:"type:uuid;index" json:"wallet_id"`
 	Type            TransactionType   `gorm:"type:varchar(20)" json:"type"`
 	Status          TransactionStatus `gorm:"type:varchar(20)" json:"status"`
@@ -48,7 +48,7 @@ type Transaction struct {
 
 // WalletSetting represents user preferences for their wallet
 type WalletSetting struct {
-	ID                uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	ID                uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID            uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"user_id"`
 	DefaultNetwork    string    `gorm:"type:varchar(20);default:'ETH'" json:"default_network"`
 	DefaultCurrency   string    `gorm:"type:varchar(10);default:'USD'" json:"default_currency"`
@@ -66,7 +66,7 @@ type WalletSetting struct {
 
 // WalletLimit represents spending limits and controls
 type WalletLimit struct {
-	ID                 uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	ID                 uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID             uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"user_id"`
 	DailyLimit         float64   `gorm:"type:decimal(20,2);default:1000.00" json:"daily_limit"`
 	MonthlyLimit       float64   `gorm:"type:decimal(20,2);default:10000.00" json:"monthly_limit"`
@@ -81,7 +81,7 @@ type WalletLimit struct {
 
 // AddressBookEntry represents a saved contact
 type AddressBookEntry struct {
-	ID         uuid.UUID   `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	ID         uuid.UUID   `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID     uuid.UUID   `gorm:"type:uuid;index" json:"user_id"`
 	Name       string      `gorm:"type:varchar(100)" json:"name"`
 	Address    string      `gorm:"type:varchar(100)" json:"address"`
@@ -95,7 +95,7 @@ type AddressBookEntry struct {
 
 // SecurityLog represents security related events
 type SecurityLog struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID    uuid.UUID `gorm:"type:uuid;index" json:"user_id"`
 	EventType string    `gorm:"type:varchar(50)" json:"event_type"` // LOGIN, PASSWORD_CHANGE, 2FA_ENABLE, WITHDRAWAL_ATTEMPT
 	Status    string    `gorm:"type:varchar(20)" json:"status"`     // SUCCESS, FAILURE, BLOCKED
