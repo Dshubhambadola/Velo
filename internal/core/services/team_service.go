@@ -2,20 +2,26 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"velo/internal/core"
+	"velo/internal/ports"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type TeamService struct {
-	DB *gorm.DB
+	DB          *gorm.DB
+	EmailSender ports.EmailSender
 }
 
-func NewTeamService(db *gorm.DB) *TeamService {
-	return &TeamService{DB: db}
+func NewTeamService(db *gorm.DB, emailSender ports.EmailSender) *TeamService {
+	return &TeamService{
+		DB:          db,
+		EmailSender: emailSender,
+	}
 }
 
 // ListMembers for a given company
@@ -79,7 +85,13 @@ func (s *TeamService) InviteMember(companyID, email, fullName, roleName string) 
 		return nil, err
 	}
 
-	// TODO: Send Invitation Email (Magic Link or Set Password)
+	// Send Invitation Email
+	if s.EmailSender != nil {
+		// In a real app, generate a specialized invite token
+		inviteURL := "http://localhost:5173/auth/register?email=" + email // Simplified
+		body := fmt.Sprintf("Hi %s,\n\nYou have been invited to join Velo. Click here to complete your registration: %s", fullName, inviteURL)
+		go s.EmailSender.SendEmail(email, "You've been invited to Velo", body)
+	}
 
 	return &newUser, nil
 }

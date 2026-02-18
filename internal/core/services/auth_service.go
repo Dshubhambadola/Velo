@@ -1,25 +1,49 @@
 package services
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"time"
 
 	"velo/internal/auth"
 	"velo/internal/core"
+	"velo/internal/ports"
 
 	"github.com/google/uuid"
 	"github.com/xlzd/gotp"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	DB *gorm.DB
+	DB           *gorm.DB
+	EmailSender  ports.EmailSender
+	GoogleConfig *oauth2.Config
 }
 
-func NewAuthService(db *gorm.DB) *AuthService {
-	return &AuthService{DB: db}
+func NewAuthService(db *gorm.DB, emailSender ports.EmailSender, googleClientID, googleClientSecret, googleRedirectURL string) *AuthService {
+	var googleConfig *oauth2.Config
+	if googleClientID != "" && googleClientSecret != "" {
+		googleConfig = &oauth2.Config{
+			ClientID:     googleClientID,
+			ClientSecret: googleClientSecret,
+			RedirectURL:  googleRedirectURL,
+			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
+			Endpoint:     google.Endpoint,
+		}
+	}
+
+	return &AuthService{
+		DB:           db,
+		EmailSender:  emailSender,
+		GoogleConfig: googleConfig,
+	}
 }
 
 func (s *AuthService) Register(email, password, fullName string) (*core.User, error) {
@@ -78,6 +102,11 @@ func (s *AuthService) Register(email, password, fullName string) (*core.User, er
 	}
 	s.DB.Create(&userRole)
 
+	// Send Welcome Email
+	if s.EmailSender != nil {
+		go s.EmailSender.SendEmail(email, "Welcome to Velo", fmt.Sprintf("Hi %s,\n\nWelcome to Velo! Your account has been created successfully.", fullName))
+	}
+
 	return &user, nil
 }
 
@@ -129,9 +158,15 @@ func (s *AuthService) ForgotPassword(email string) error {
 		return err
 	}
 
-	// Mock Send Email
-	// In production: emailService.SendPasswordReset(user.Email, resetToken)
-	log.Printf("[MOCK EMAIL] Password Reset for %s: Token=%s", email, resetToken)
+	// Send Email
+	if s.EmailSender != nil {
+		// Construct Reset URL (Assuming frontend is at localhost:5173 for now, should be env var)
+		resetURL := fmt.Sprintf("http://localhost:5173/auth/reset-password?token=%s", resetToken)
+		body := fmt.Sprintf("Hi,\n\nYou requested a password reset. Click here to reset your password: %s\n\nThis link expires in 15 minutes.", resetURL)
+		go s.EmailSender.SendEmail(user.Email, "Reset Your Velo Password", body)
+	} else {
+		log.Printf("[MOCK EMAIL] Password Reset for %s: Token=%s", email, resetToken)
+	}
 
 	return nil
 }
@@ -168,8 +203,15 @@ func (s *AuthService) RequestMagicLink(email string) error {
 		return err
 	}
 
-	// Mock Send Email
-	log.Printf("[MOCK EMAIL] Magic Link for %s: Token=%s", email, token)
+	// Send Email
+	if s.EmailSender != nil {
+		// Construct Magic Link URL
+		magicLink := fmt.Sprintf("http://localhost:5173/auth/magic-login?token=%s", token)
+		body := fmt.Sprintf("Hi,\n\nClick here to login to Velo: %s\n\nThis link expires in 15 minutes.", magicLink)
+		go s.EmailSender.SendEmail(user.Email, "Login to Velo", body)
+	} else {
+		log.Printf("[MOCK EMAIL] Magic Link for %s: Token=%s", email, token)
+	}
 
 	return nil
 }
@@ -198,10 +240,6 @@ func (s *AuthService) Generate2FA(userID string) (string, string, error) {
 	// Generate TOTP Secret
 	secret := gotp.RandomSecret(16)
 
-	// Temporarily save secret to user (or separate table for pending)
-	// For MVP, likely just return it and save when enabled
-	// OR save it now but enabled=false
-
 	// Using simple model here: save secret immediately, but TwoFactorEnabled=false until verified
 	if err := s.DB.Model(&core.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
 		"two_factor_secret":  secret,
@@ -211,7 +249,6 @@ func (s *AuthService) Generate2FA(userID string) (string, string, error) {
 	}
 
 	// Generate QR URI
-	// otpauth://totp/Velo:{email}?secret={secret}&issuer=Velo
 	var user core.User
 	s.DB.First(&user, "id = ?", userID)
 
@@ -242,10 +279,6 @@ func (s *AuthService) Verify2FA(userID, code string) (string, error) {
 	}
 
 	if !user.TwoFactorEnabled {
-		// Should not happen if flow is correct, but safe fallback
-		// If 2FA is NOT enabled, we shouldn't be here verifying it usually.
-		// But if we are, maybe just return token?
-		// Or return error "2FA not enabled"
 		return "", errors.New("2FA is not enabled for this user")
 	}
 
@@ -263,39 +296,130 @@ func (s *AuthService) Verify2FA(userID, code string) (string, error) {
 	return auth.GenerateToken(user.ID, user.CompanyID, user.Email, roles)
 }
 
-// SSO Placeholders
+// SSO Implementation
 
 func (s *AuthService) InitiateSSO(provider string) (string, error) {
-	// Mock URL based on provider
-	// In reality, this would construct the OAuth2 URL
-	if provider != "google" && provider != "microsoft" {
-		return "", errors.New("unsupported provider")
+	if provider == "google" {
+		if s.GoogleConfig == nil {
+			return "", errors.New("google sso not configured")
+		}
+		// Generate random state for CSRF protection (should be stored/validated in production)
+		state := "random-state-string"
+		url := s.GoogleConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+		return url, nil
 	}
 
-	// Return a dummy URL that the frontend redirects to
-	// For placeholder, maybe we just return a success message or a specific code
-	// But to simulate, let's return a fake auth URL
-	return "https://accounts.google.com/o/oauth2/v2/auth?client_id=mock_client_id&redirect_uri=http://localhost:8080/auth/sso/callback&response_type=code&scope=email profile", nil
+	// Microsoft placeholder
+	if provider == "microsoft" {
+		return "", errors.New("microsoft sso not implemented yet")
+	}
+
+	return "", errors.New("unsupported provider")
 }
 
 func (s *AuthService) HandleSSOCallback(code string) (string, error) {
-	// Mock callback handling
-	// In reality, exchange code for token, get user info, find/create user, generate JWT
-	if code == "mock_code" {
-		// Simulate successful login for a demo user
-		// In a real app, we would look up the user by email from the provider
-		var user core.User
-		if err := s.DB.Preload("UserRoles.Role").First(&user).Error; err != nil {
-			return "", errors.New("no users found to mock login with")
-		}
-
-		// Generate JWT
-		var roles []string
-		for _, ur := range user.UserRoles {
-			roles = append(roles, ur.Role.Name)
-		}
-
-		return auth.GenerateToken(user.ID, user.CompanyID, user.Email, roles)
+	if s.GoogleConfig == nil {
+		return "", errors.New("google sso not configured")
 	}
-	return "", errors.New("invalid sso code")
+
+	// Exchange code for token
+	token, err := s.GoogleConfig.Exchange(context.Background(), code)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token: %w", err)
+	}
+
+	// Fetch User Info
+	client := s.GoogleConfig.Client(context.Background(), token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		return "", fmt.Errorf("failed to get user info: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("failed to get user info: status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var userInfo struct {
+		ID            string `json:"id"`
+		Email         string `json:"email"`
+		VerifiedEmail bool   `json:"verified_email"`
+		Name          string `json:"name"`
+		Picture       string `json:"picture"`
+	}
+
+	if err := json.Unmarshal(body, &userInfo); err != nil {
+		return "", err
+	}
+
+	// Find or Create User
+	var user core.User
+
+	if err := s.DB.Preload("UserRoles.Role").Where("email = ?", userInfo.Email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+
+			// Register new user logic (simplified from Register)
+			// Create Company
+			company := core.Company{
+				ID:     uuid.New(),
+				Name:   userInfo.Name + "'s Company",
+				Domain: "temp-" + uuid.New().String() + ".com",
+			}
+			if err := s.DB.Create(&company).Error; err != nil {
+				return "", err
+			}
+
+			user = core.User{
+				ID:            uuid.New(),
+				Email:         userInfo.Email,
+				FullName:      userInfo.Name,
+				CompanyID:     company.ID,
+				EmailVerified: userInfo.VerifiedEmail,
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
+			}
+
+			if err := s.DB.Create(&user).Error; err != nil {
+				return "", err
+			}
+
+			// Assign Owner Role
+			var ownerRole core.Role
+			if err := s.DB.Where("name = ?", "owner").First(&ownerRole).Error; err != nil {
+				ownerRole = core.Role{ID: uuid.New(), Name: "owner", Description: "Owner", IsSystemRole: true}
+				s.DB.Create(&ownerRole)
+			}
+
+			userRole := core.UserRole{
+				ID:        uuid.New(),
+				UserID:    user.ID,
+				CompanyID: company.ID,
+				RoleID:    ownerRole.ID,
+			}
+			s.DB.Create(&userRole)
+
+			// Reload user with roles
+			s.DB.Preload("UserRoles.Role").First(&user, "id = ?", user.ID)
+
+			// Send Welcome Email
+			if s.EmailSender != nil {
+				go s.EmailSender.SendEmail(user.Email, "Welcome to Velo", fmt.Sprintf("Hi %s,\n\nWelcome to Velo! You have successfully signed up with Google.", user.FullName))
+			}
+		} else {
+			return "", err
+		}
+	}
+
+	// Generate JWT
+	var roles []string
+	for _, ur := range user.UserRoles {
+		roles = append(roles, ur.Role.Name)
+	}
+
+	return auth.GenerateToken(user.ID, user.CompanyID, user.Email, roles)
 }
