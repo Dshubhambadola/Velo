@@ -4,10 +4,12 @@ import (
 	"log"
 	"os"
 
+	"velo/internal/adapters/email"
 	"velo/internal/adapters/http"
 	"velo/internal/adapters/payment/circle"
 	"velo/internal/core/services"
 	"velo/internal/middleware"
+	"velo/internal/ports"
 	"velo/pkg/database"
 
 	"github.com/gin-gonic/gin"
@@ -24,9 +26,37 @@ func main() {
 	database.ConnectPostgres()
 	database.ConnectRedis()
 
+	// Initialize Email Service
+	var emailSender ports.EmailSender
+	apiKey := os.Getenv("SENDGRID_API_KEY")
+	fromEmail := os.Getenv("SENDGRID_FROM_EMAIL")
+	fromName := os.Getenv("SENDGRID_FROM_NAME")
+
+	if apiKey != "" {
+		var err error
+		emailSender, err = email.NewSendGridAdapter(apiKey, fromName, fromEmail)
+		if err != nil {
+			log.Printf("Failed to initialize SendGrid: %v", err)
+		} else {
+			log.Println("SendGrid Adapter Initialized")
+		}
+	} else {
+		log.Println("SENDGRID_API_KEY not set. Email sending will be mocked (logged to stdout).")
+	}
+
+	// Google SSO Config
+	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	googleRedirectURL := os.Getenv("GOOGLE_REDIRECT_URL")
+
 	// Initialize Services
-	authService := services.NewAuthService(database.DB)
-	authHandler := http.NewAuthHandler(authService)
+	authService := services.NewAuthService(database.DB, emailSender, googleClientID, googleClientSecret, googleRedirectURL)
+
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173"
+	}
+	authHandler := http.NewAuthHandler(authService, frontendURL)
 
 	// Initialize Gin
 	r := gin.Default()
@@ -52,6 +82,10 @@ func main() {
 		auth.POST("/magic-link", authHandler.RequestMagicLink)
 		auth.POST("/magic-login", authHandler.LoginWithMagicLink)
 		auth.POST("/2fa/verify", authHandler.Verify2FA)
+
+		// SSO
+		auth.GET("/sso/:provider/initiate", authHandler.InitiateSSO)
+		auth.GET("/sso/callback", authHandler.SSOCallback)
 	}
 
 	// Protected Routes

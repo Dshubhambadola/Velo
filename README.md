@@ -63,7 +63,32 @@ Built with a modern tech stack, Velo is fast, secure, and scalable.
     cd velo
     ```
 
-2.  **Install Backend Dependencies:**
+2.  **Configure Environment Variables:**
+    Create a `.env` file in the root directory (based on `.env.example`).
+    ```ini
+    # Database
+    DATABASE_URL="host=localhost user=postgres password=postgres dbname=velo port=5432 sslmode=disable"
+    REDIS_URL="localhost:6379"
+
+    # Auth
+    JWT_SECRET="your-secret-key"
+
+    # Email Service (SendGrid)
+    SENDGRID_API_KEY="SG.your_api_key"
+    SENDGRID_FROM_EMAIL="no-reply@velo.com"
+    SENDGRID_FROM_NAME="Velo Team"
+
+    # Google SSO
+    GOOGLE_CLIENT_ID="your-google-client-id"
+    GOOGLE_CLIENT_SECRET="your-google-client-secret"
+    GOOGLE_REDIRECT_URL="http://localhost:8080/auth/sso/callback"
+
+    # Payment Provider (Circle)
+    CIRCLE_API_KEY="your-circle-api-key"
+    CIRCLE_SANDBOX="true"
+    ```
+
+3.  **Install Backend Dependencies:**
     ```bash
     go mod download
     ```

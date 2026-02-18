@@ -10,11 +10,49 @@ import (
 )
 
 type AuthHandler struct {
-	Service *services.AuthService
+	Service     *services.AuthService
+	FrontendURL string
 }
 
-func NewAuthHandler(service *services.AuthService) *AuthHandler {
-	return &AuthHandler{Service: service}
+func NewAuthHandler(service *services.AuthService, frontendURL string) *AuthHandler {
+	return &AuthHandler{
+		Service:     service,
+		FrontendURL: frontendURL,
+	}
+}
+
+// ... existing struct types ...
+
+// (Keep Register, Login, ForgotPassword, etc. unchanged until SSOCallback)
+
+// SSO Handlers
+
+func (h *AuthHandler) InitiateSSO(c *gin.Context) {
+	provider := c.Param("provider")
+	url, err := h.Service.InitiateSSO(provider)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"redirect_url": url})
+}
+
+func (h *AuthHandler) SSOCallback(c *gin.Context) {
+	code := c.Query("code")
+	if code == "" {
+		c.Redirect(http.StatusTemporaryRedirect, h.FrontendURL+"/login?error=missing_code")
+		return
+	}
+
+	token, err := h.Service.HandleSSOCallback(code)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect, h.FrontendURL+"/login?error="+err.Error())
+		return
+	}
+
+	// Redirect to Frontend Callback Page with Token
+	c.Redirect(http.StatusTemporaryRedirect, h.FrontendURL+"/auth/callback?token="+token)
 }
 
 type RegisterRequest struct {
@@ -222,35 +260,4 @@ func (h *AuthHandler) Verify2FA(c *gin.Context) {
 		"valid": true,
 		"token": token,
 	})
-}
-
-// SSO Handlers
-
-func (h *AuthHandler) InitiateSSO(c *gin.Context) {
-	provider := c.Param("provider")
-	url, err := h.Service.InitiateSSO(provider)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"redirect_url": url})
-}
-
-func (h *AuthHandler) SSOCallback(c *gin.Context) {
-	code := c.Query("code")
-	if code == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing code"})
-		return
-	}
-
-	token, err := h.Service.HandleSSOCallback(code)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-
-	// In a real app, we might redirect to frontend with token in query param or cookie
-	// For this API-centric approach, we return JSON
-	c.JSON(http.StatusOK, gin.H{"token": token})
 }
