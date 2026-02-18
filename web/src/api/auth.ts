@@ -44,3 +44,8 @@ export const verify2FA = async (userId: string, code: string) => {
     const response = await client.post('/auth/2fa/verify', { user_id: userId, code });
     return response.data;
 };
+
+export const initiateSSO = async (provider: string) => {
+    const response = await client.get(`/auth/sso/${provider}/initiate`);
+    return response.data;
+};

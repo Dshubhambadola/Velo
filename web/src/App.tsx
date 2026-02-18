@@ -31,6 +31,7 @@ import ResetPassword from './pages/ResetPassword';
 import ResetPasswordSuccess from './pages/ResetPasswordSuccess';
 import ResetLinkExpired from './pages/ResetLinkExpired';
 import SSOSignIn from './pages/SSOSignIn';
+import SSOCallback from './pages/SSOCallback';
 import SSORedirect from './pages/SSORedirect';
 import SSONotConfigured from './pages/SSONotConfigured';
 import SessionExpired from './pages/SessionExpired';
@@ -111,6 +112,7 @@ function App() {
                 <Route path="/reset-password/expired" element={<ResetLinkExpired />} />
                 <Route path="/sso-login" element={<SSOSignIn />} />
                 <Route path="/sso-redirect" element={<SSORedirect />} />
+                <Route path="/auth/callback" element={<SSOCallback />} />
                 <Route path="/sso-error" element={<SSONotConfigured />} />
                 <Route path="/session-expired" element={<SessionExpired />} />
                 <Route path="/quick-reauth" element={<QuickReauth />} />
