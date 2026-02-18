@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -15,9 +16,10 @@ import (
 )
 
 type CircleAdapter struct {
-	apiKey  string
-	baseURL string
-	client  *http.Client
+	apiKey     string
+	baseURL    string
+	client     *http.Client
+	simulation bool
 }
 
 func NewCircleAdapter(apiKey string, sandbox bool) ports.PaymentProvider {
@@ -26,17 +28,35 @@ func NewCircleAdapter(apiKey string, sandbox bool) ports.PaymentProvider {
 		baseURL = "https://api-sandbox.circle.com"
 	}
 
+	simulation := apiKey == ""
+	if simulation {
+		log.Println("[CircleAdapter] API Key not set. Running in SIMULATION mode.")
+	}
+
 	return &CircleAdapter{
-		apiKey:  apiKey,
-		baseURL: baseURL,
-		client:  &http.Client{Timeout: 30 * time.Second},
+		apiKey:     apiKey,
+		baseURL:    baseURL,
+		client:     &http.Client{Timeout: 30 * time.Second},
+		simulation: simulation,
 	}
 }
 
+func (c *CircleAdapter) Name() string {
+	if c.simulation {
+		return "circle-simulation"
+	}
+	return "circle"
+}
+
 func (c *CircleAdapter) CreateWallet(ctx context.Context, userID string) (*ports.Wallet, error) {
-	// For Circle API v1, managing wallets usually involves "Master Wallet" or "User Controlled Wallets".
-	// For MVP, we might assume a single master wallet or generating addresses.
-	// But let's follow the PRD logic of creating a wallet.
+	if c.simulation {
+		// Return a mock wallet
+		return &ports.Wallet{
+			ID:       uuid.New().String(),
+			Balance:  "1000.00", // Initial mock balance
+			Currency: "USD",
+		}, nil
+	}
 
 	payload := map[string]interface{}{
 		"idempotencyKey": uuid.New().String(),
@@ -59,7 +79,7 @@ func (c *CircleAdapter) CreateWallet(ctx context.Context, userID string) (*ports
 	}
 
 	if err := json.Unmarshal(resp, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse wallet response: %w", err)
 	}
 
 	balance := "0.00"
@@ -70,11 +90,19 @@ func (c *CircleAdapter) CreateWallet(ctx context.Context, userID string) (*ports
 	return &ports.Wallet{
 		ID:       result.Data.WalletID,
 		Balance:  balance,
-		Currency: "USD", // Circle uses USD for USDC storage usually in their API context
+		Currency: "USD",
 	}, nil
 }
 
 func (c *CircleAdapter) Transfer(ctx context.Context, req ports.TransferRequest) (*ports.TransferResponse, error) {
+	if c.simulation {
+		return &ports.TransferResponse{
+			TransferID:      uuid.New().String(),
+			Status:          "complete",
+			TransactionHash: "0xsimulatedhash" + uuid.New().String(),
+		}, nil
+	}
+
 	payload := map[string]interface{}{
 		"idempotencyKey": req.IdempotencyKey,
 		"source": map[string]string{
@@ -106,7 +134,7 @@ func (c *CircleAdapter) Transfer(ctx context.Context, req ports.TransferRequest)
 	}
 
 	if err := json.Unmarshal(respData, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse transfer response: %w", err)
 	}
 
 	return &ports.TransferResponse{
@@ -117,6 +145,14 @@ func (c *CircleAdapter) Transfer(ctx context.Context, req ports.TransferRequest)
 }
 
 func (c *CircleAdapter) GetBalance(ctx context.Context, walletID string) (*ports.Balance, error) {
+	if c.simulation {
+		return &ports.Balance{
+			Available: "1000.00",
+			Pending:   "0.00",
+			Currency:  "USD",
+		}, nil
+	}
+
 	resp, err := c.makeRequest(ctx, "GET", "/v1/wallets/"+walletID, nil)
 	if err != nil {
 		return nil, err
@@ -132,7 +168,7 @@ func (c *CircleAdapter) GetBalance(ctx context.Context, walletID string) (*ports
 	}
 
 	if err := json.Unmarshal(resp, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse balance response: %w", err)
 	}
 
 	amount := "0.00"
@@ -147,8 +183,20 @@ func (c *CircleAdapter) GetBalance(ctx context.Context, walletID string) (*ports
 }
 
 func (c *CircleAdapter) GetTransactions(ctx context.Context, walletID string) ([]ports.Transaction, error) {
-	// Endpoint for transfers might be /v1/transfers?walletIds=[walletID]
-	// For MVP simplicity, let's assume we fetch transfers
+	if c.simulation {
+		return []ports.Transaction{
+			{
+				ID:              uuid.New().String(),
+				Amount:          "100.00",
+				Currency:        "USD",
+				Status:          "complete",
+				TransactionHash: "0xsimulated" + uuid.New().String(),
+				Type:            "deposit",
+				Timestamp:       time.Now(),
+			},
+		}, nil
+	}
+
 	endpoint := fmt.Sprintf("/v1/transfers?walletIds=%s", walletID)
 	resp, err := c.makeRequest(ctx, "GET", endpoint, nil)
 	if err != nil {
@@ -177,7 +225,7 @@ func (c *CircleAdapter) GetTransactions(ctx context.Context, walletID string) ([
 	}
 
 	if err := json.Unmarshal(resp, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse transactions response: %w", err)
 	}
 
 	var transactions []ports.Transaction
@@ -188,7 +236,7 @@ func (c *CircleAdapter) GetTransactions(ctx context.Context, walletID string) ([
 			Currency:        t.Amount.Currency,
 			Status:          t.Status,
 			TransactionHash: t.TransactionHash,
-			FromAddress:     t.Source.ID, // Simplified
+			FromAddress:     t.Source.ID,
 			ToAddress:       t.Destination.Address,
 			Timestamp:       t.CreateDate,
 			Type:            "transfer", // Simplified
@@ -198,29 +246,34 @@ func (c *CircleAdapter) GetTransactions(ctx context.Context, walletID string) ([
 	return transactions, nil
 }
 
-func (c *CircleAdapter) Name() string {
-	return "circle"
-}
-
 func (c *CircleAdapter) makeRequest(ctx context.Context, method, endpoint string, body interface{}) ([]byte, error) {
 	var reqBody io.Reader
 	if body != nil {
-		jsonData, _ := json.Marshal(body)
+		jsonData, err := json.Marshal(body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal request body: %w", err)
+		}
 		reqBody = bytes.NewBuffer(jsonData)
 	}
 
-	req, _ := http.NewRequestWithContext(ctx, method, c.baseURL+endpoint, reqBody)
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+endpoint, reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	respBytes, _ := io.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
 
 	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("Circle API error: %d - %s", resp.StatusCode, string(respBytes))
