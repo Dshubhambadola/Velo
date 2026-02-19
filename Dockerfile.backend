@@ -1,0 +1,39 @@
+FROM golang:1.25-alpine AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache git build-base
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Build all services
+RUN CGO_ENABLED=1 GOOS=linux go build -o /bin/auth ./cmd/auth
+RUN CGO_ENABLED=1 GOOS=linux go build -o /bin/compliance ./cmd/compliance
+RUN CGO_ENABLED=1 GOOS=linux go build -o /bin/gateway ./cmd/gateway
+RUN CGO_ENABLED=1 GOOS=linux go build -o /bin/migrate ./cmd/migrate
+RUN CGO_ENABLED=1 GOOS=linux go build -o /bin/payroll ./cmd/payroll
+RUN CGO_ENABLED=1 GOOS=linux go build -o /bin/wallet ./cmd/wallet
+
+# Final Stage
+FROM alpine:latest
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata
+
+COPY --from=builder /bin/auth /usr/local/bin/auth
+COPY --from=builder /bin/compliance /usr/local/bin/compliance
+COPY --from=builder /bin/gateway /usr/local/bin/gateway
+COPY --from=builder /bin/migrate /usr/local/bin/migrate
+COPY --from=builder /bin/payroll /usr/local/bin/payroll
+COPY --from=builder /bin/wallet /usr/local/bin/wallet
+
+# Expose ports
+EXPOSE 8080 8081 8082 8083 8084
+
+CMD ["gateway"]
