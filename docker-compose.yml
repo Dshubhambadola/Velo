@@ -1,9 +1,42 @@
 version: '3.8'
 
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: velo-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+    env_file:
+      - .env.docker
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - velo-network
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: velo-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - velo-network
+    restart: always
+
   postgres:
     image: postgres:16-alpine
     container_name: velo-postgres
+    restart: always
     environment:
       POSTGRES_USER: velo
       POSTGRES_PASSWORD: password
@@ -14,20 +47,32 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - velo-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U velo" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     container_name: velo-redis
+    restart: always
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - velo-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
   redis_data:
+
 
 networks:
   velo-network:
