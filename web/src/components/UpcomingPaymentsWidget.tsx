@@ -14,7 +14,7 @@ interface PayrollBatch {
 const UpcomingPaymentsWidget: React.FC = () => {
     const [batches, setBatches] = useState<PayrollBatch[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    // const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -98,7 +98,7 @@ const UpcomingPaymentsWidget: React.FC = () => {
                                             <div className="flex flex-wrap items-center gap-2 mb-1">
                                                 <h3 className="font-semibold text-white truncate">{batch.description}</h3>
                                                 <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded uppercase whitespace-nowrap ${batch.status === 'processing' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
-                                                        'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                                    'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                                     }`}>
                                                     {batch.status}
                                                 </span>
