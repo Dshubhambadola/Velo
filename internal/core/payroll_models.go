@@ -20,6 +20,10 @@ type PayrollBatch struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 
+	// Recurrence
+	RecurrenceRule  string // "weekly", "monthly", "bi-weekly", "none"
+	NextExecutionAt time.Time
+
 	Patterns []Payment `gorm:"foreignKey:BatchID"`
 }
 

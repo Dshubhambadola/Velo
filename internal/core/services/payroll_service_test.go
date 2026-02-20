@@ -3,6 +3,7 @@ package services_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"velo/internal/core"
 	"velo/internal/core/services"
@@ -46,7 +47,7 @@ func TestPayrollService_CreateBatch(t *testing.T) {
 		},
 	}
 
-	batch, err := service.CreateBatch(ctx, companyID, userID, payments, "Feb Payroll")
+	batch, err := service.CreateBatch(ctx, companyID, userID, payments, "Feb Payroll", "", time.Time{})
 
 	require.NoError(t, err)
 	require.NotNil(t, batch)
@@ -85,7 +86,7 @@ func TestPayrollService_CreateBatch_HighAmount_Approval(t *testing.T) {
 		},
 	}
 
-	batch, err := service.CreateBatch(ctx, companyID, userID, payments, "High Value Payroll")
+	batch, err := service.CreateBatch(ctx, companyID, userID, payments, "High Value Payroll", "", time.Time{})
 
 	require.NoError(t, err)
 	assert.Equal(t, "awaiting_approval", batch.Status)

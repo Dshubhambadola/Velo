@@ -22,7 +22,7 @@ func NewPayrollService(db *gorm.DB) *PayrollService {
 }
 
 // CreateBatch creates a new payroll batch from parsed data
-func (s *PayrollService) CreateBatch(ctx context.Context, companyID, userID uuid.UUID, payments []core.Payment, description string) (*core.PayrollBatch, error) {
+func (s *PayrollService) CreateBatch(ctx context.Context, companyID, userID uuid.UUID, payments []core.Payment, description string, recurrenceRule string, firstExecutionAt time.Time) (*core.PayrollBatch, error) {
 	batchID := uuid.New()
 	totalAmount := decimal.Zero
 	for i, p := range payments {
@@ -36,14 +36,16 @@ func (s *PayrollService) CreateBatch(ctx context.Context, companyID, userID uuid
 	}
 
 	batch := core.PayrollBatch{
-		ID:             batchID,
-		CompanyID:      companyID,
-		SubmittedBy:    userID,
-		Status:         "pending",
-		TotalAmount:    totalAmount,
-		RecipientCount: len(payments),
-		Description:    description,
-		Patterns:       payments,
+		ID:              batchID,
+		CompanyID:       companyID,
+		SubmittedBy:     userID,
+		Status:          "pending",
+		TotalAmount:     totalAmount,
+		RecipientCount:  len(payments),
+		Description:     description,
+		RecurrenceRule:  recurrenceRule,
+		NextExecutionAt: firstExecutionAt,
+		Patterns:        payments,
 	}
 
 	if err := s.DB.Create(&batch).Error; err != nil {

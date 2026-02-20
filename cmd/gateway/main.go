@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
+	"velo/internal/adapters/compliance/sumsub"
 	"velo/internal/adapters/email"
 	"velo/internal/adapters/http"
 	"velo/internal/adapters/payment/circle"
@@ -58,6 +60,16 @@ func main() {
 	}
 	authHandler := http.NewAuthHandler(authService, frontendURL)
 
+	// Initialize Compliance Service
+	sumsubAppToken := os.Getenv("SUMSUB_APP_TOKEN")
+	sumsubSecretKey := os.Getenv("SUMSUB_SECRET_KEY")
+	sumsubLevelName := os.Getenv("SUMSUB_LEVEL_NAME")
+	sumsubSimulation := os.Getenv("SUMSUB_SIMULATION") == "true"
+
+	sumsubAdapter := sumsub.NewSumsubAdapter(sumsubAppToken, sumsubSecretKey, sumsubLevelName, sumsubSimulation)
+	complianceService := services.NewComplianceService(database.DB, sumsubAdapter)
+	complianceHandler := http.NewComplianceHandler(complianceService)
+
 	// Initialize Gin
 	r := gin.Default()
 
@@ -88,6 +100,9 @@ func main() {
 		auth.GET("/sso/callback", authHandler.SSOCallback)
 	}
 
+	// Public Webhooks
+	r.POST("/webhooks/sumsub", complianceHandler.HandleWebhook)
+
 	// Protected Routes
 	protected := r.Group("/api")
 	protected.Use(middleware.AuthMiddleware())
@@ -104,6 +119,10 @@ func main() {
 		protected.GET("/payroll/batches", payrollHandler.ListBatches)
 		protected.GET("/payroll/batches/:batch_id", payrollHandler.GetBatch)
 		protected.POST("/payroll/batches/:batch_id/execute", payrollHandler.ExecuteBatch)
+
+		// Scheduler (Background Worker)
+		schedulerService := services.NewSchedulerService(database.DB, payrollService)
+		schedulerService.StartScheduler(1 * time.Hour) // Check every hour
 
 		// Wallet Routes
 		circleAdapter := circle.NewCircleAdapter(os.Getenv("CIRCLE_API_KEY"), os.Getenv("CIRCLE_SANDBOX") == "true")
@@ -165,7 +184,37 @@ func main() {
 		statusHandler := http.NewSystemStatusHandler(statusService)
 		// Public route
 		r.GET("/status", statusHandler.GetStatus)
+
+		// Compliance
+		protected.POST("/compliance/kyc/initiate", complianceHandler.InitiateKYC)
 	}
+
+	// Admin Routes (Protected + RBAC)
+	admin := r.Group("/admin")
+	admin.Use(middleware.AuthMiddleware())
+	admin.Use(middleware.AdminMiddleware())
+	{
+		adminService := services.NewAdminService(database.DB)
+		adminHandler := http.NewAdminHandler(adminService)
+
+		// User Management
+		admin.GET("/users", adminHandler.ListUsers)
+		admin.GET("/users/:userID", adminHandler.GetUser)
+		// admin.POST("/users/:userID/suspend", adminHandler.SuspendUser)
+
+		// Compliance Review
+		admin.GET("/compliance/queue", adminHandler.GetComplianceQueue)
+		admin.POST("/compliance/:userID/approve", adminHandler.ApproveKYC)
+		admin.POST("/compliance/:userID/reject", adminHandler.RejectKYC)
+
+		// Transactions
+		admin.GET("/transactions", adminHandler.ListTransactions)
+	}
+
+	// Webhooks
+	// Re-initialize compliance handler for public route if needed, or reuse variable if scope allows.
+	// Since variable scope is inside `protected` block above (if I put it there), I should move matching logic up or re-initialize.
+	// Actually, I should initialize services BEFORE the routes group.
 
 	// Start Server
 	port := os.Getenv("PORT")
