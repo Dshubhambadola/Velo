@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"time"
 
 	"velo/internal/core"
 	"velo/internal/core/services"
@@ -28,6 +29,14 @@ func (h *PayrollHandler) UploadBatch(c *gin.Context) {
 	defer file.Close()
 
 	description := c.PostForm("description")
+	recurrenceRule := c.PostForm("recurrence_rule")
+	nextExecutionAtStr := c.PostForm("next_execution_at")
+
+	var nextExecutionAt time.Time
+	if nextExecutionAtStr != "" {
+		nextExecutionAt, _ = time.Parse(time.RFC3339, nextExecutionAtStr)
+	}
+
 	companyID := c.MustGet("company_id").(uuid.UUID)
 	userID := c.MustGet("user_id").(uuid.UUID)
 
@@ -37,7 +46,44 @@ func (h *PayrollHandler) UploadBatch(c *gin.Context) {
 		return
 	}
 
-	batch, err := h.Service.CreateBatch(c.Request.Context(), companyID, userID, payments, description)
+	batch, err := h.Service.CreateBatch(c.Request.Context(), companyID, userID, payments, description, recurrenceRule, nextExecutionAt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message":  "Batch created successfully",
+		"batch_id": batch.ID,
+		"status":   batch.Status,
+	})
+}
+
+// CreateBatchRequest defines the payload for manual batch creation
+type CreateBatchRequest struct {
+	Description     string         `json:"description"`
+	Payments        []core.Payment `json:"payments"`
+	RecurrenceRule  string         `json:"recurrence_rule"`
+	NextExecutionAt string         `json:"next_execution_at"` // RFC3339
+}
+
+// CreateBatchManual handles manual batch creation via JSON
+func (h *PayrollHandler) CreateBatchManual(c *gin.Context) {
+	var req CreateBatchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var nextExecutionAt time.Time
+	if req.NextExecutionAt != "" {
+		nextExecutionAt, _ = time.Parse(time.RFC3339, req.NextExecutionAt)
+	}
+
+	companyID := c.MustGet("company_id").(uuid.UUID)
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	batch, err := h.Service.CreateBatch(c.Request.Context(), companyID, userID, req.Payments, req.Description, req.RecurrenceRule, nextExecutionAt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -98,36 +144,6 @@ func (h *PayrollHandler) GetBatch(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, batch)
-}
-
-// CreateBatchRequest defines the payload for manual batch creation
-type CreateBatchRequest struct {
-	Description string         `json:"description"`
-	Payments    []core.Payment `json:"payments"`
-}
-
-// CreateBatchManual handles manual batch creation via JSON
-func (h *PayrollHandler) CreateBatchManual(c *gin.Context) {
-	var req CreateBatchRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	companyID := c.MustGet("company_id").(uuid.UUID)
-	userID := c.MustGet("user_id").(uuid.UUID)
-
-	batch, err := h.Service.CreateBatch(c.Request.Context(), companyID, userID, req.Payments, req.Description)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message":  "Batch created successfully",
-		"batch_id": batch.ID,
-		"status":   batch.Status,
-	})
 }
 
 // ExecuteBatch triggers batch processing
