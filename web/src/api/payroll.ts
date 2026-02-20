@@ -1,9 +1,12 @@
 import client from './client';
 
-export const uploadBatch = async (file: File, description: string) => {
+// Uploads a batch CSV file
+export const uploadBatch = async (file: File, description: string, recurrenceRule?: string, nextExecutionAt?: string) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('description', description);
+    if (recurrenceRule) formData.append('recurrence_rule', recurrenceRule);
+    if (nextExecutionAt) formData.append('next_execution_at', nextExecutionAt);
 
     const response = await client.post('/payroll/upload', formData, {
         headers: {
@@ -37,10 +40,12 @@ export const executeBatch = async (batchId: string) => {
 };
 
 // Creates a manual payroll batch
-export const createBatchManual = async (description: string, payments: any[]) => {
+export const createBatchManual = async (description: string, payments: any[], recurrenceRule?: string, nextExecutionAt?: string) => {
     const response = await client.post('/payroll/create', {
         description,
-        payments
+        payments,
+        recurrence_rule: recurrenceRule,
+        next_execution_at: nextExecutionAt,
     });
     return response.data;
 };

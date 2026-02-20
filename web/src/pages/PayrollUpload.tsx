@@ -10,10 +10,12 @@ const PayrollUpload: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [uploadState, setUploadState] = useState<UploadState>('idle');
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [recurrenceRule, setRecurrenceRule] = useState('none');
+    const [nextExecutionAt, setNextExecutionAt] = useState('');
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            startUpload(e.target.files[0]);
+            setFile(e.target.files[0]);
         }
     };
 
@@ -21,7 +23,7 @@ const PayrollUpload: React.FC = () => {
         e.preventDefault();
         e.stopPropagation();
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            startUpload(e.dataTransfer.files[0]);
+            setFile(e.dataTransfer.files[0]);
         }
     };
 
@@ -30,14 +32,14 @@ const PayrollUpload: React.FC = () => {
         e.stopPropagation();
     };
 
-    const startUpload = async (selectedFile: File) => {
-        setFile(selectedFile);
+    const startUpload = async () => {
+        if (!file) return;
         setUploadState('uploading');
         setUploadProgress(10); // Start progress
 
         try {
             // Description is currently hardcoded as it's not in the UI
-            const response = await uploadBatch(selectedFile, `Batch upload: ${selectedFile.name}`);
+            const response = await uploadBatch(file, `Batch upload: ${file.name}`, recurrenceRule, nextExecutionAt);
             setUploadProgress(100);
             setUploadState('complete');
             // Store batch ID for navigation
@@ -113,9 +115,9 @@ const PayrollUpload: React.FC = () => {
                         {/* Main Interaction Area */}
                         <div className="bg-charcoal rounded-xl border border-obsidian-border shadow-2xl overflow-hidden">
                             {uploadState === 'idle' && (
-                                <div className="p-2">
+                                <div className="p-6 space-y-6">
                                     <div
-                                        className="dashed-border w-full min-h-[420px] flex flex-col items-center justify-center bg-obsidian-black/40 group cursor-pointer transition-all duration-300 hover:bg-obsidian-black/60 border-2 border-dashed border-obsidian-border hover:border-primary rounded-xl"
+                                        className="dashed-border w-full min-h-[300px] flex flex-col items-center justify-center bg-obsidian-black/40 group cursor-pointer transition-all duration-300 hover:bg-obsidian-black/60 border-2 border-dashed border-obsidian-border hover:border-primary rounded-xl"
                                         onDrop={handleDrop}
                                         onDragOver={handleDragOver}
                                         onClick={() => fileInputRef.current?.click()}
@@ -130,23 +132,54 @@ const PayrollUpload: React.FC = () => {
                                         <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-all">
                                             <span className="material-icons text-primary text-4xl">cloud_upload</span>
                                         </div>
-                                        <h3 className="text-xl font-semibold mb-2 text-white">Drag and drop your CSV file here</h3>
-                                        <p className="text-silver-grey mb-8">or <span className="text-primary font-medium hover:underline">click to browse</span> your computer</p>
-                                        <div className="flex gap-8 text-xs font-medium text-silver-grey/60">
-                                            <div className="flex items-center gap-2">
-                                                <span className="material-icons text-sm">description</span>
-                                                CSV only
+                                        <h3 className="text-xl font-semibold mb-2 text-white">
+                                            {file ? file.name : 'Drag and drop your CSV file here'}
+                                        </h3>
+                                        {!file && (
+                                            <p className="text-silver-grey mb-8">or <span className="text-primary font-medium hover:underline">click to browse</span> your computer</p>
+                                        )}
+                                    </div>
+
+                                    {/* Recurrence Settings */}
+                                    <div className="bg-charcoal p-4 rounded-lg border border-obsidian-border">
+                                        <h4 className="text-sm font-semibold text-white mb-4">Scheduling (Optional)</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-silver-grey mb-1">Recurrence</label>
+                                                <select
+                                                    value={recurrenceRule}
+                                                    onChange={(e) => setRecurrenceRule(e.target.value)}
+                                                    className="w-full bg-obsidian-black border border-obsidian-border rounded px-3 py-2 text-white text-sm focus:border-primary focus:outline-none"
+                                                >
+                                                    <option value="none">None (One-time)</option>
+                                                    <option value="weekly">Weekly</option>
+                                                    <option value="bi-weekly">Bi-Weekly</option>
+                                                    <option value="monthly">Monthly</option>
+                                                </select>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="material-icons text-sm">storage</span>
-                                                Max 10MB
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="material-icons text-sm">reorder</span>
-                                                Up to 10k rows
-                                            </div>
+                                            {recurrenceRule !== 'none' && (
+                                                <div>
+                                                    <label className="block text-xs text-silver-grey mb-1">First Execution</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        value={nextExecutionAt}
+                                                        onChange={(e) => setNextExecutionAt(e.target.value)}
+                                                        className="w-full bg-obsidian-black border border-obsidian-border rounded px-3 py-2 text-white text-sm focus:border-primary focus:outline-none"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
+
+                                    {/* Upload Button */}
+                                    {file && (
+                                        <button
+                                            onClick={startUpload}
+                                            className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-colors"
+                                        >
+                                            Start Upload
+                                        </button>
+                                    )}
                                 </div>
                             )}
 

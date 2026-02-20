@@ -5,6 +5,8 @@ import { createBatchManual } from '../api/payroll';
 const PayrollManualEntry: React.FC = () => {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [recurrenceRule, setRecurrenceRule] = useState('none');
+    const [nextExecutionAt, setNextExecutionAt] = useState('');
 
     // Mock Data for Table
     const [recipients, setRecipients] = useState([
@@ -33,7 +35,7 @@ const PayrollManualEntry: React.FC = () => {
             // Filter out invalid/empty rows if necessary
             const validPayments = payments.filter(p => p.amount > 0);
 
-            const response = await createBatchManual("Manual Entry Batch", validPayments);
+            const response = await createBatchManual("Manual Entry Batch", validPayments, recurrenceRule, nextExecutionAt);
             navigate(`/payroll/review/${response.batch_id}`);
         } catch (error) {
             console.error("Failed to create batch:", error);
@@ -183,43 +185,38 @@ const PayrollManualEntry: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Validation Checklist */}
-                            <div className="mt-10 p-4 rounded-xl bg-background-dark border border-border-dark">
-                                <h3 className="text-[10px] font-bold text-neutral-silver uppercase tracking-widest mb-4">Integrity Checks</h3>
-                                <ul className="space-y-3">
-                                    <li className="flex items-start gap-3">
-                                        <span className="material-icons text-emerald-500 text-sm mt-0.5">check_circle</span>
-                                        <div className="text-[11px] leading-tight">
-                                            <div className="font-semibold text-white">KYC Verified</div>
-                                            <div className="text-neutral-silver/60">All recipient identities validated</div>
-                                        </div>
-                                    </li>
-                                    <li className="flex items-start gap-3">
-                                        <span className="material-icons text-amber-500 text-sm mt-0.5">warning</span>
-                                        <div className="text-[11px] leading-tight">
-                                            <div className="font-semibold text-white">Missing Tax Data</div>
-                                            <div className="text-neutral-silver/60">Michael Chen (Row 03) requires TIN</div>
-                                        </div>
-                                    </li>
-                                    <li className="flex items-start gap-3">
-                                        <span className="material-icons text-emerald-500 text-sm mt-0.5">check_circle</span>
-                                        <div className="text-[11px] leading-tight">
-                                            <div className="font-semibold text-white">Limit Check</div>
-                                            <div className="text-neutral-silver/60">Within daily transfer limits</div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            {/* Technical Meta */}
-                            <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="material-icons text-primary text-sm">security</span>
-                                    <span className="text-[10px] font-bold text-primary uppercase">Security Protocol</span>
+                            {/* Recurrence Settings */}
+                            <div className="p-4 bg-background-dark border border-border-dark rounded-xl">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="material-icons text-primary text-sm">schedule</span>
+                                    <span className="text-[10px] font-bold text-primary uppercase">Scheduling</span>
                                 </div>
-                                <p className="text-[11px] text-neutral-silver leading-relaxed">
-                                    This batch is protected by end-to-end AES-256 encryption. Transactions will be routed via Velo Prime liquidity pools.
-                                </p>
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-[10px] text-neutral-silver mb-1 uppercase tracking-wider font-bold">Recurrence</label>
+                                        <select
+                                            value={recurrenceRule}
+                                            onChange={(e) => setRecurrenceRule(e.target.value)}
+                                            className="w-full bg-surface border border-border-dark rounded px-2 py-1.5 text-white text-xs focus:border-primary focus:outline-none"
+                                        >
+                                            <option value="none">None (One-time)</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="bi-weekly">Bi-Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                        </select>
+                                    </div>
+                                    {recurrenceRule !== 'none' && (
+                                        <div>
+                                            <label className="block text-[10px] text-neutral-silver mb-1 uppercase tracking-wider font-bold">First Execution</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={nextExecutionAt}
+                                                onChange={(e) => setNextExecutionAt(e.target.value)}
+                                                className="w-full bg-surface border border-border-dark rounded px-2 py-1.5 text-white text-xs focus:border-primary focus:outline-none"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
