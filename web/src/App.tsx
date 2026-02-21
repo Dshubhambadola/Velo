@@ -69,6 +69,11 @@ import TeamManagement from './pages/TeamManagement';
 import RolesOverview from './pages/RolesOverview';
 import CreateRole from './pages/CreateRole';
 
+import AdminLayout from './components/AdminLayout';
+import AdminUsers from './pages/admin/Users';
+import AdminCompliance from './pages/admin/Compliance';
+import AdminTransactions from './pages/admin/Transactions';
+
 function App() {
     return (
         <Router>
@@ -142,6 +147,14 @@ function App() {
                 <Route path="/contacts" element={<AddressBook />} />
                 <Route path="/analytics" element={<WalletAnalytics />} />
                 <Route path="/employees" element={<TeamManagement />} />
+
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<div className="text-white">Admin Dashboard Overview - Select a section from the sidebar.</div>} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="compliance" element={<AdminCompliance />} />
+                    <Route path="transactions" element={<AdminTransactions />} />
+                </Route>
             </Routes>
         </Router>
     );
