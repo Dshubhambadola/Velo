@@ -33,6 +33,10 @@ type User struct {
 	IDExpiry       string // YYYY-MM-DD
 	IssuingCountry string
 
+	// Compliance
+	ApplicantID string
+	KYCStatus   string // init, pending, approved, rejected
+
 	// Advanced Auth
 	ResetToken              string
 	ResetTokenExpiresAt     time.Time
