@@ -12,23 +12,19 @@ Built with a modern tech stack, Velo is fast, secure, and scalable.
 - **Multi-Currency Support**: Seamlessly manage balances in USD, USDC, and other currencies.
 - **Provider Agnostic**: integrated with top-tier payment providers (Circle, Stripe) ensuring reliability.
 - **Granular Controls**: Set daily/monthly spending limits and configure custom wallet settings.
-- **Comprehensive Analytics**: Visualize spending trends, cash flow, and transaction breakdowns.
+### 📊 Analytics & Reporting
+- **Data Export**: Export transaction histories and batch summaries in CSV format.
+- **Interactive Dashboards**: Visualize spending trends, cash flow, and transaction breakdowns with advanced charting.
 
-### 💸 Automated Payroll
-- **Batch Processing**: Pay hundreds of employees or contractors in a single click.
-- **CSV Import**: Easily upload payroll data for bulk processing.
-- **Approval Workflows**: Automated safeguards trigger approval requests for high-value batches (> $100k).
-- **Flexible Payments**: Support for salary, bonuses, and contractor payouts.
+### 🛠 Developer API & Webhooks
+- **API Key Management**: Generate and manage API keys for programmatic access.
+- **Webhook Dispatcher**: Register secure webhook endpoints with HMAC-SHA256 signatures for real-time event notifications (`batch.executed`, etc.).
 
-### 👥 Team & Access Control
-- **Role-Based Access Control (RBAC)**: Define custom roles (Admin, Finance Manager, Auditor) with precise permissions.
-- **Secure Invitations**: Invite team members via email with secure token-based onboarding.
-- **Audit Logs**: Track every action taken within the platform for full accountability.
-
-### 🔒 Enterprise-Grade Security
+### 🔒 Enterprise-Grade Security & Governance
+- **Maker-Checker Logic**: Enforce multi-user approval workflows for high-value transactions.
+- **Immutable Audit Trails**: Centralized, append-only audit logging for all critical system actions with IP and User-Agent tracking.
 - **Two-Factor Authentication (2FA)**: Layered security with TOTP support.
 - **SSO Integration**: seamless login via Google and Microsoft (Enterprise Ready).
-- **Security Logs**: Monitor login attempts, password changes, and sensitive actions.
 
 ## 🛠 Technology Stack
 
