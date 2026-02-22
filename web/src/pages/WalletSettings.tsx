@@ -13,9 +13,62 @@ const WalletSettings: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+    // API Keys State
+    const [apiKeys, setApiKeys] = useState<any[]>([]);
+    const [loadingKeys, setLoadingKeys] = useState(false);
+    const [generatingKey, setGeneratingKey] = useState(false);
+    const [newKeySecret, setNewKeySecret] = useState<string | null>(null);
+
     useEffect(() => {
         loadSettings();
+        loadApiKeys();
     }, []);
+
+    const loadApiKeys = async () => {
+        try {
+            setLoadingKeys(true);
+            const { getDeveloperKeys } = await import('../api/wallet');
+            const data = await getDeveloperKeys();
+            setApiKeys(data.keys || []);
+        } catch (err) {
+            console.error('Failed to load API keys', err);
+        } finally {
+            setLoadingKeys(false);
+        }
+    };
+
+    const handleGenerateKey = async () => {
+        try {
+            setGeneratingKey(true);
+            setNewKeySecret(null); // Reset previous secret
+            const { createDeveloperKey } = await import('../api/wallet');
+            const name = `Key - ${new Date().toLocaleDateString()}`;
+            const newKey = await createDeveloperKey(name);
+            setNewKeySecret(newKey.secret_key);
+            loadApiKeys(); // Refresh list
+        } catch (err) {
+            console.error(err);
+            setError('Failed to generate API Key');
+        } finally {
+            setGeneratingKey(false);
+        }
+    };
+
+    const handleRevokeKey = async (id: string) => {
+        if (!window.confirm('Are you sure you want to revoke this key? Any integrations using it will break.')) return;
+
+        try {
+            const { revokeDeveloperKey } = await import('../api/wallet');
+            await revokeDeveloperKey(id);
+            setSuccessMessage('API key revoked successfully');
+            setTimeout(() => setSuccessMessage(null), 3000);
+            loadApiKeys();
+        } catch (err) {
+            console.error(err);
+            setError('Failed to revoke API Key');
+        }
+    };
+
 
     const loadSettings = async () => {
         try {
@@ -201,32 +254,71 @@ const WalletSettings: React.FC = () => {
                                         <h3 className="font-medium">Active API Keys</h3>
                                         <p className="text-xs text-[#A0A0A0]">Keys used to authenticate your custom dApps and integrations.</p>
                                     </div>
-                                    <button className="px-4 py-2 border border-[#0d6cf2] text-[#0d6cf2] hover:bg-[#0d6cf2]/10 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
-                                        <span className="material-icons text-sm">add</span>
+                                    <button
+                                        onClick={handleGenerateKey}
+                                        disabled={generatingKey}
+                                        className="px-4 py-2 bg-[#0d6cf2] hover:bg-[#0d6cf2]/90 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50">
+                                        {generatingKey ? (
+                                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                                        ) : (
+                                            <span className="material-icons text-sm">add</span>
+                                        )}
                                         Generate New Key
                                     </button>
                                 </div>
-                                <div className="divide-y divide-[#262626]">
-                                    {/* Mock API Keys */}
-                                    <div className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded bg-[#0d6cf2]/10 flex items-center justify-center text-[#0d6cf2]">
-                                                <span className="material-icons">vpn_key</span>
-                                            </div>
+                                {newKeySecret && (
+                                    <div className="p-4 m-6 mb-0 bg-green-900/20 border border-green-500/50 rounded-lg">
+                                        <div className="flex justify-between items-start">
                                             <div>
-                                                <p className="text-sm font-medium">Main App Key</p>
-                                                <p className="text-xs font-mono text-[#A0A0A0]">vl_live_••••••••••••••••3a9b</p>
+                                                <h4 className="text-sm font-bold text-green-400 mb-1">Key Generated Successfully</h4>
+                                                <p className="text-xs text-green-200 mb-2">Please copy this secret key now. You will not be able to see it again.</p>
+                                                <code className="bg-black/50 px-3 py-1.5 rounded text-sm text-white border border-green-500/30 break-all">{newKeySecret}</code>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button className="p-2 text-[#A0A0A0] hover:text-white transition-colors">
+                                            <button
+                                                onClick={() => navigator.clipboard.writeText(newKeySecret)}
+                                                className="p-1.5 text-green-400 hover:bg-green-400/10 rounded transition-colors"
+                                                title="Copy to clipboard"
+                                            >
                                                 <span className="material-icons text-lg">content_copy</span>
-                                            </button>
-                                            <button className="px-3 py-1 text-xs font-semibold text-red-400 hover:bg-red-400/10 rounded border border-red-400/20 transition-all uppercase tracking-wider">
-                                                Revoke
                                             </button>
                                         </div>
                                     </div>
+                                )}
+                                <div className="divide-y divide-[#262626]">
+                                    {loadingKeys ? (
+                                        <div className="p-8 flex justify-center">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#0d6cf2]"></div>
+                                        </div>
+                                    ) : apiKeys.length === 0 ? (
+                                        <div className="p-8 text-center text-[#A0A0A0] text-sm">
+                                            No active API keys found.
+                                        </div>
+                                    ) : (
+                                        apiKeys.map((key) => (
+                                            <div key={key.id} className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded bg-[#0d6cf2]/10 flex items-center justify-center text-[#0d6cf2]">
+                                                        <span className="material-icons">vpn_key</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium">{key.name}</p>
+                                                        <p className="text-xs font-mono text-[#A0A0A0]">{key.prefix}••••••••••••••••</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="text-right hidden sm:block">
+                                                        <p className="text-[10px] text-[#A0A0A0] uppercase tracking-wider">Created</p>
+                                                        <p className="text-xs">{new Date(key.created_at).toLocaleDateString()}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleRevokeKey(key.id)}
+                                                        className="px-3 py-1 text-xs font-semibold text-red-400 hover:bg-red-400/10 rounded border border-red-400/20 transition-all uppercase tracking-wider">
+                                                        Revoke
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </section>

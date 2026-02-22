@@ -55,6 +55,21 @@ export const addContact = async (data: any) => {
 };
 
 export const getAnalytics = async () => {
-    const response = await client.get('/wallet/analytics');
+    const response = await client.get('/reports/analytics');
+    return response.data;
+};
+
+export const getDeveloperKeys = async () => {
+    const response = await client.get('/developer/keys');
+    return response.data;
+};
+
+export const createDeveloperKey = async (name: string) => {
+    const response = await client.post('/developer/keys', { name });
+    return response.data;
+};
+
+export const revokeDeveloperKey = async (id: string) => {
+    const response = await client.delete(`/developer/keys/${id}`);
     return response.data;
 };
