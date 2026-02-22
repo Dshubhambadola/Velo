@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { getAnalytics } from '../api/wallet';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+
+const chartData = [
+    { name: 'Jan', actual: 4000, forecast: 4100 },
+    { name: 'Feb', actual: 3000, forecast: 3200 },
+    { name: 'Mar', actual: 2000, forecast: 2200 },
+    { name: 'Apr', actual: 2780, forecast: 2900 },
+    { name: 'May', actual: 1890, forecast: 2100 },
+    { name: 'Jun', actual: 2390, forecast: 2500 },
+    { name: 'Jul', actual: 3490, forecast: 3600 },
+];
+const networkData = [
+    { name: 'ETH', fees: 21492, color: '#0657f9' },
+    { name: 'POLY', fees: 12110, color: '#00f2ff' },
+    { name: 'SOL', fees: 6233, color: '#ffffff' },
+    { name: 'BASE', fees: 3066, color: '#93c5fd' },
+];
 
 const WalletAnalytics: React.FC = () => {
     const [data, setData] = useState<any>(null);
@@ -156,7 +173,7 @@ const WalletAnalytics: React.FC = () => {
                     {/* Middle Charts Row */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Budget Forecast Line Chart */}
-                        <div className="lg:col-span-2 bg-[#121212] border border-[#1c1c1c] p-6 rounded-xl">
+                        <div className="lg:col-span-2 bg-[#121212] border border-[#1c1c1c] p-6 rounded-xl flex flex-col">
                             <div className="flex justify-between items-center mb-8">
                                 <div>
                                     <h4 className="text-lg font-bold">Budget Forecast</h4>
@@ -173,80 +190,82 @@ const WalletAnalytics: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="relative h-[300px] w-full border-l border-b border-[#1c1c1c] flex items-end">
-                                {/* SVG Chart Visual */}
-                                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-                                    {/* Grid Lines */}
-                                    <line stroke="#1c1c1c" strokeDasharray="4" x1="0" x2="100%" y1="25%" y2="25%"></line>
-                                    <line stroke="#1c1c1c" strokeDasharray="4" x1="0" x2="100%" y1="50%" y2="50%"></line>
-                                    <line stroke="#1c1c1c" strokeDasharray="4" x1="0" x2="100%" y1="75%" y2="75%"></line>
-                                    {/* Projection Area */}
-                                    <path className="glow-primary" d="M 0 250 Q 150 200 300 180 T 600 120 T 900 80" fill="none" stroke="url(#gradientPrimary)" strokeWidth="4"></path>
-                                    <path className="glow-cyan" d="M 900 80 L 1200 40" fill="none" stroke="#00f2ff" strokeDasharray="8" strokeWidth="2"></path>
-                                    <defs>
-                                        <linearGradient id="gradientPrimary" x1="0%" x2="100%" y1="0%" y2="0%">
-                                            <stop offset="0%" style={{ stopColor: '#0657f9', stopOpacity: 1 }}></stop>
-                                            <stop offset="100%" style={{ stopColor: '#00f2ff', stopOpacity: 1 }}></stop>
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                                {/* Labels */}
-                                <div className="absolute bottom-[-24px] left-0 right-0 flex justify-between px-2 text-[10px] text-[#A0A0A0] uppercase font-bold tracking-tighter">
-                                    <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
-                                </div>
-                                <div className="absolute left-[-40px] top-0 h-full flex flex-col justify-between text-[10px] text-[#A0A0A0] font-bold pr-2">
-                                    <span>$2M</span><span>$1.5M</span><span>$1M</span><span>$500K</span><span>0</span>
-                                </div>
+                            <div className="flex-1 w-full min-h-[300px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={data?.forecast_data || chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#0657f9" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#0657f9" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#00f2ff" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#00f2ff" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="4 4" stroke="#1c1c1c" vertical={false} />
+                                        <XAxis
+                                            dataKey="name"
+                                            stroke="#A0A0A0"
+                                            fontSize={10}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            stroke="#A0A0A0"
+                                            fontSize={10}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickFormatter={(value) => `$${value / 1000}k`}
+                                            dx={-10}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#121212', borderColor: '#1c1c1c', borderRadius: '8px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                        />
+                                        <Area type="monotone" dataKey="actual" stroke="#0657f9" strokeWidth={3} fillOpacity={1} fill="url(#colorActual)" />
+                                        <Area type="monotone" dataKey="forecast" stroke="#00f2ff" strokeWidth={2} strokeDasharray="5 5" fillOpacity={1} fill="url(#colorForecast)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
 
-                        {/* Cost Analysis Stacked Bar */}
-                        <div className="bg-[#121212] border border-[#1c1c1c] p-6 rounded-xl">
+                        {/* Cost Analysis Stacked Bar chart */}
+                        <div className="bg-[#121212] border border-[#1c1c1c] p-6 rounded-xl flex flex-col">
                             <div className="mb-6">
                                 <h4 className="text-lg font-bold">Cost Analysis</h4>
                                 <p className="text-[#A0A0A0] text-xs">Fees paid per network</p>
                             </div>
-                            <div className="space-y-6">
-                                <div>
-                                    <div className="flex justify-between text-xs mb-2 uppercase tracking-widest font-bold">
-                                        <span>Ethereum</span>
-                                        <span className="text-white">$21,492</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-[#1c1c1c] rounded-full flex overflow-hidden">
-                                        <div className="bg-[#0657f9] w-[70%] glow-primary"></div>
-                                        <div className="bg-[#0657f9]/40 w-[30%]"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex justify-between text-xs mb-2 uppercase tracking-widest font-bold">
-                                        <span>Polygon</span>
-                                        <span className="text-white">$12,110</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-[#1c1c1c] rounded-full flex overflow-hidden">
-                                        <div className="bg-[#00f2ff] w-[40%] glow-cyan"></div>
-                                        <div className="bg-[#00f2ff]/40 w-[60%]"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex justify-between text-xs mb-2 uppercase tracking-widest font-bold">
-                                        <span>Solana</span>
-                                        <span className="text-white">$6,233</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-[#1c1c1c] rounded-full flex overflow-hidden">
-                                        <div className="bg-white/60 w-[20%]"></div>
-                                        <div className="bg-white/20 w-[80%]"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex justify-between text-xs mb-2 uppercase tracking-widest font-bold">
-                                        <span>Base</span>
-                                        <span className="text-white">$3,066</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-[#1c1c1c] rounded-full flex overflow-hidden">
-                                        <div className="bg-blue-300 w-[12%]"></div>
-                                        <div className="bg-blue-300/20 w-[88%]"></div>
-                                    </div>
-                                </div>
+                            <div className="flex-1 w-full min-h-[250px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={data?.network_data || networkData}
+                                        layout="vertical"
+                                        margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#1c1c1c" horizontal={false} />
+                                        <XAxis type="number" hide />
+                                        <YAxis
+                                            dataKey="name"
+                                            type="category"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#A0A0A0', fontSize: 10, fontWeight: 'bold' }}
+                                            width={60}
+                                        />
+                                        <Tooltip
+                                            cursor={{ fill: '#1c1c1c', opacity: 0.4 }}
+                                            contentStyle={{ backgroundColor: '#121212', borderColor: '#1c1c1c', borderRadius: '8px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                        />
+                                        <Bar dataKey="fees" radius={[0, 4, 4, 0]}>
+                                            {networkData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </div>
                             <div className="mt-8 pt-6 border-t border-[#1c1c1c] flex justify-between items-center">
                                 <span className="text-xs text-[#A0A0A0]">Avg. Network Fee</span>

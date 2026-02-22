@@ -168,10 +168,16 @@ func main() {
 		protected.POST("/notifications/:id/read", notificationHandler.MarkAsRead)
 		protected.POST("/notifications/read-all", notificationHandler.MarkAllAsRead)
 
-		// Analytics
+		// Analytics (Old/Basic)
 		analyticsService := services.NewAnalyticsService(database.DB)
 		analyticsHandler := http.NewAnalyticsHandler(analyticsService)
 		protected.GET("/analytics/overview", analyticsHandler.GetOverview)
+
+		// Reporting & Advanced Analytics
+		reportingService := services.NewReportingService(database.DB)
+		reportingHandler := http.NewReportingHandler(reportingService)
+		protected.GET("/reports/batches/:batch_id/export", reportingHandler.ExportBatchCSV)
+		protected.GET("/reports/analytics", reportingHandler.GetAnalytics)
 
 		// Bridge
 		bridgeService := services.NewBridgeService(database.DB)
@@ -211,7 +217,32 @@ func main() {
 		admin.GET("/transactions", adminHandler.ListTransactions)
 	}
 
-	// Webhooks
+	// Developer API Routes (Protected)
+	developer := r.Group("/developer")
+	developer.Use(middleware.AuthMiddleware())
+	{
+		apiKeyService := services.NewAPIKeyService(database.DB)
+		apiKeyHandler := http.NewAPIKeyHandler(apiKeyService)
+
+		developer.POST("/keys", apiKeyHandler.GenerateKey)
+		developer.GET("/keys", apiKeyHandler.ListKeys)
+		developer.DELETE("/keys/:id", apiKeyHandler.RevokeKey)
+
+		webhookService := services.NewWebhookService(database.DB)
+		webhookHandler := http.NewWebhookHandler(webhookService)
+
+		developer.POST("/webhooks", webhookHandler.CreateEndpoint)
+		developer.GET("/webhooks", webhookHandler.ListEndpoints)
+		developer.DELETE("/webhooks/:id", webhookHandler.DeleteEndpoint)
+		developer.POST("/webhooks/trigger", webhookHandler.TriggerEvent) // For testing MVP
+
+		auditService := services.NewAuditService(database.DB)
+		auditHandler := http.NewAuditHandler(auditService)
+
+		developer.GET("/audit-logs", auditHandler.ListLogs)
+	}
+
+	// Webhooks (Public Ingress)
 	// Re-initialize compliance handler for public route if needed, or reuse variable if scope allows.
 	// Since variable scope is inside `protected` block above (if I put it there), I should move matching logic up or re-initialize.
 	// Actually, I should initialize services BEFORE the routes group.
