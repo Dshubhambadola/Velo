@@ -46,13 +46,26 @@ type Payment struct {
 
 // PaymentApproval handles the workflow for high-value batches
 type PaymentApproval struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	BatchID     uuid.UUID `gorm:"uniqueIndex;not null"`
-	RequestedBy uuid.UUID `gorm:"not null"`
-	ApprovedBy  uuid.UUID
-	Status      string `gorm:"default:'pending'"` // pending, approved, rejected
-	Comments    string
-	DecidedAt   time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID                uuid.UUID `gorm:"type:uuid;primaryKey"`
+	BatchID           uuid.UUID `gorm:"uniqueIndex;not null"`
+	RequestedBy       uuid.UUID `gorm:"not null"`
+	RequiredApprovals int       `gorm:"default:1"`
+	CurrentApprovals  int       `gorm:"default:0"`
+	Status            string    `gorm:"default:'pending'"` // pending, partially_approved, approved, rejected
+	Comments          string
+	DecidedAt         *time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+
+	Signatures []PaymentApprovalSignature `gorm:"foreignKey:ApprovalID"`
+}
+
+// PaymentApprovalSignature records each individual user's approval
+type PaymentApprovalSignature struct {
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey"`
+	ApprovalID uuid.UUID `gorm:"index;not null"`
+	UserID     uuid.UUID `gorm:"index;not null"`     // User who approved/rejected
+	Status     string    `gorm:"default:'approved'"` // approved, rejected
+	Comments   string
+	CreatedAt  time.Time
 }

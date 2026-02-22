@@ -19,7 +19,7 @@ import (
 func setupPayrollDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
-	err = db.AutoMigrate(&core.PayrollBatch{}, &core.Payment{}, &core.PaymentApproval{})
+	err = db.AutoMigrate(&core.PayrollBatch{}, &core.Payment{}, &core.PaymentApproval{}, &core.PaymentApprovalSignature{})
 	require.NoError(t, err)
 	return db
 }
@@ -42,7 +42,7 @@ func TestPayrollService_CreateBatch(t *testing.T) {
 		{
 			RecipientName:  "Jane Smith",
 			RecipientEmail: "jane@example.com",
-			Amount:         decimal.NewFromInt(7000),
+			Amount:         decimal.NewFromInt(4000),
 			Currency:       "USD",
 		},
 	}
@@ -53,7 +53,7 @@ func TestPayrollService_CreateBatch(t *testing.T) {
 	require.NotNil(t, batch)
 	assert.Equal(t, "pending", batch.Status)
 	assert.Equal(t, 2, batch.RecipientCount)
-	assert.True(t, batch.TotalAmount.Equal(decimal.NewFromInt(12000)))
+	assert.True(t, batch.TotalAmount.Equal(decimal.NewFromInt(9000)))
 
 	// Verify DB insertion via Count
 	var paymentCount int64
@@ -76,12 +76,12 @@ func TestPayrollService_CreateBatch_HighAmount_Approval(t *testing.T) {
 	companyID := uuid.New()
 	userID := uuid.New()
 
-	// Amount > 100,000 triggers approval
+	// Amount > 10,000 triggers approval
 	payments := []core.Payment{
 		{
 			RecipientName:  "Big Earner",
 			RecipientEmail: "big@example.com",
-			Amount:         decimal.NewFromInt(150000),
+			Amount:         decimal.NewFromInt(15000),
 			Currency:       "USD",
 		},
 	}
@@ -96,12 +96,18 @@ func TestPayrollService_CreateBatch_HighAmount_Approval(t *testing.T) {
 	err = db.Where("batch_id = ?", batch.ID).First(&approval).Error
 	assert.NoError(t, err)
 	assert.Equal(t, "pending", approval.Status)
+	assert.Equal(t, 2, approval.RequiredApprovals)
+	assert.Equal(t, 0, approval.CurrentApprovals)
 }
 
 func TestPayrollService_ApproveBatch(t *testing.T) {
 	db := setupPayrollDB(t)
 	service := services.NewPayrollService(db)
 	ctx := context.Background()
+
+	makerID := uuid.New()
+	checker1ID := uuid.New()
+	checker2ID := uuid.New()
 
 	// Setup: Create a batch needing approval
 	batchID := uuid.New()
@@ -113,21 +119,49 @@ func TestPayrollService_ApproveBatch(t *testing.T) {
 
 	approvalID := uuid.New()
 	approval := core.PaymentApproval{
-		ID:      approvalID,
-		BatchID: batch.ID,
-		Status:  "pending",
+		ID:                approvalID,
+		BatchID:           batch.ID,
+		RequestedBy:       makerID,
+		RequiredApprovals: 2,
+		CurrentApprovals:  0,
+		Status:            "pending",
 	}
 	db.Create(&approval)
 
-	approverID := uuid.New()
-	err := service.ApproveBatch(ctx, approval.ID, approverID)
+	// Test Maker cannot be Checker
+	err := service.ApproveBatch(ctx, approval.ID, makerID)
+	require.Error(t, err)
+	assert.Equal(t, "creator cannot approve their own batch", err.Error())
 
+	// Test Checker 1 Approves
+	err = service.ApproveBatch(ctx, approval.ID, checker1ID)
 	require.NoError(t, err)
 
-	// Verify Approval Updated
+	// Verify Partial Approval
 	var dbApproval core.PaymentApproval
 	db.First(&dbApproval, "id = ?", approval.ID)
+	assert.Equal(t, "partially_approved", dbApproval.Status)
+	assert.Equal(t, 1, dbApproval.CurrentApprovals)
+
+	// Test Checker 1 cannot approve again
+	err = service.ApproveBatch(ctx, approval.ID, checker1ID)
+	require.Error(t, err)
+	assert.Equal(t, "user has already approved this batch", err.Error())
+
+	// Test Checker 2 Approves
+	err = service.ApproveBatch(ctx, approval.ID, checker2ID)
+	require.NoError(t, err)
+
+	// Verify Final Approval
+	db.First(&dbApproval, "id = ?", approval.ID)
 	assert.Equal(t, "approved", dbApproval.Status)
+	assert.Equal(t, 2, dbApproval.CurrentApprovals)
+	assert.NotNil(t, dbApproval.DecidedAt)
+
+	// Verify Signatures created
+	var count int64
+	db.Model(&core.PaymentApprovalSignature{}).Where("approval_id = ?", approval.ID).Count(&count)
+	assert.Equal(t, int64(2), count)
 
 	// Verify Batch Updated
 	var dbBatch core.PayrollBatch

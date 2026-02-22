@@ -5,6 +5,7 @@ import {
     UsersIcon,
     ShieldCheckIcon,
     BanknotesIcon,
+    ClipboardDocumentListIcon,
     ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline'; // v2 outline icons
 
@@ -13,6 +14,7 @@ const navigation = [
     { name: 'Users', href: '/admin/users', icon: UsersIcon },
     { name: 'Compliance Queue', href: '/admin/compliance', icon: ShieldCheckIcon },
     { name: 'Transactions', href: '/admin/transactions', icon: BanknotesIcon },
+    { name: 'Audit Logs', href: '/admin/audit', icon: ClipboardDocumentListIcon },
 ];
 
 export default function AdminLayout() {

@@ -73,6 +73,7 @@ import AdminLayout from './components/AdminLayout';
 import AdminUsers from './pages/admin/Users';
 import AdminCompliance from './pages/admin/Compliance';
 import AdminTransactions from './pages/admin/Transactions';
+import AuditLogs from './pages/admin/AuditLogs';
 
 function App() {
     return (
@@ -154,6 +155,7 @@ function App() {
                     <Route path="users" element={<AdminUsers />} />
                     <Route path="compliance" element={<AdminCompliance />} />
                     <Route path="transactions" element={<AdminTransactions />} />
+                    <Route path="audit" element={<AuditLogs />} />
                 </Route>
             </Routes>
         </Router>

@@ -52,16 +52,18 @@ func (s *PayrollService) CreateBatch(ctx context.Context, companyID, userID uuid
 		return nil, err
 	}
 
-	// Check if approval is needed (Rule: > $100k or specific role)
-	// For MVP: approval needed if amount > 100,000
-	limit := decimal.NewFromInt(100000)
+	// Check if approval is needed
+	// For MVP: approval needed if amount > 10000. Required approvals: 2.
+	limit := decimal.NewFromInt(10000)
 	if totalAmount.GreaterThan(limit) {
 		approval := core.PaymentApproval{
-			ID:          uuid.New(),
-			BatchID:     batch.ID,
-			RequestedBy: userID,
-			Status:      "pending",
-			Comments:    fmt.Sprintf("Auto-flagged: Amount exceeds $%s", limit.String()),
+			ID:                uuid.New(),
+			BatchID:           batch.ID,
+			RequestedBy:       userID,
+			RequiredApprovals: 2,
+			CurrentApprovals:  0,
+			Status:            "pending",
+			Comments:          fmt.Sprintf("Auto-flagged: Amount exceeds $%s. Requires 2 approvals.", limit.String()),
 		}
 		s.DB.Create(&approval)
 
@@ -81,28 +83,52 @@ func (s *PayrollService) GetBatch(batchID uuid.UUID) (*core.PayrollBatch, error)
 	return &batch, nil
 }
 
-// ApproveBatch approves a batch for processing
+// ApproveBatch approves a batch for processing (or adds a signature for multi-approval)
 func (s *PayrollService) ApproveBatch(ctx context.Context, approvalID, approverID uuid.UUID) error {
 	var approval core.PaymentApproval
-	if err := s.DB.First(&approval, "id = ?", approvalID).Error; err != nil {
+	if err := s.DB.Preload("Signatures").First(&approval, "id = ?", approvalID).Error; err != nil {
 		return err
 	}
 
-	if approval.Status != "pending" {
-		return errors.New("approval is not pending")
+	if approval.Status == "approved" || approval.Status == "rejected" {
+		return errors.New("approval is already finalized")
 	}
 
-	// Update Approval
-	approval.Status = "approved"
-	approval.ApprovedBy = approverID
-	approval.DecidedAt = time.Now()
+	// Rule 1: Maker cannot be Checker
+	if approval.RequestedBy == approverID {
+		return errors.New("creator cannot approve their own batch")
+	}
+
+	// Rule 2: Cannot approve multiple times
+	for _, sig := range approval.Signatures {
+		if sig.UserID == approverID {
+			return errors.New("user has already approved this batch")
+		}
+	}
+
+	// Record the signature
+	signature := core.PaymentApprovalSignature{
+		ID:         uuid.New(),
+		ApprovalID: approval.ID,
+		UserID:     approverID,
+		Status:     "approved",
+		CreatedAt:  time.Now(),
+	}
+	s.DB.Create(&signature)
+
+	// Update Approval counters
+	approval.CurrentApprovals++
+	if approval.CurrentApprovals >= approval.RequiredApprovals {
+		approval.Status = "approved"
+		now := time.Now()
+		approval.DecidedAt = &now
+
+		// Update Batch Status
+		s.DB.Model(&core.PayrollBatch{}).Where("id = ?", approval.BatchID).Update("status", "ready_for_processing")
+	} else {
+		approval.Status = "partially_approved"
+	}
 	s.DB.Save(&approval)
-
-	// Update Batch Status
-	s.DB.Model(&core.PayrollBatch{}).Where("id = ?", approval.BatchID).Update("status", "ready_for_processing")
-
-	// Trigger Async Processing (In a real system, send to Kafka/Queue)
-	// go s.ProcessBatch(approval.BatchID)
 
 	return nil
 }
