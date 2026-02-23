@@ -123,6 +123,50 @@ type AuditLog struct {
 	CreatedAt  time.Time
 }
 
+// CorporateCard represents a physical or virtual card issued to an employee
+type CorporateCard struct {
+	ID             uuid.UUID `gorm:"type:uuid;primaryKey"`
+	CompanyID      uuid.UUID `gorm:"index;not null"`
+	UserID         uuid.UUID `gorm:"index;not null"`   // Assigned employee
+	Type           string    `gorm:"not null"`         // "physical" or "virtual"
+	Status         string    `gorm:"default:'active'"` // active, frozen, canceled
+	Last4          string    `gorm:"not null"`
+	ExpiryMonth    int       `gorm:"not null"`
+	ExpiryYear     int       `gorm:"not null"`
+	DailyLimit     int       `gorm:"default:0"` // 0 = no specific limit
+	MonthlyLimit   int       `gorm:"default:0"` // 0 = no specific limit
+	ProviderCardID string    // ID from Stripe/Marqeta
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+// YieldBalance represents the funds a company has allocated to earn interest
+type YieldBalance struct {
+	CompanyID         uuid.UUID `gorm:"primaryKey;type:uuid"`
+	AllocatedAmount   int       // Amount currently in yield protocol (cents)
+	EarnedInterest    int       // Total interest earned so far (cents)
+	CurrentAPY        float64   // e.g., 4.25
+	LastAccrualTime   time.Time
+	ProviderReference string // Mock protocol ref (e.g. Aave/Compound)
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+}
+
+// Integration represents a connection to a third-party service (e.g., QuickBooks, Xero)
+type Integration struct {
+	ID           uuid.UUID `gorm:"primaryKey;type:uuid"`
+	CompanyID    uuid.UUID `gorm:"index;not null"`
+	Provider     string    // "quickbooks", "xero", "netsuite"
+	Status       string    // "connected", "disconnected", "error"
+	AccessToken  string    // Encrypted in a real app
+	RefreshToken string    // Encrypted
+	ExpiresAt    time.Time
+	SyncSettings string // JSON string for specific sync options
+	LastSyncAt   time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
 // Role represents a user role (RBAC)
 type Role struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`

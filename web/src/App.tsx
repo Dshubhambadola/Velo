@@ -64,6 +64,9 @@ import TransactionHistory from './pages/TransactionHistory';
 import WalletSecurity from './pages/WalletSecurity';
 import AddressBook from './pages/AddressBook';
 import WalletAnalytics from './pages/WalletAnalytics';
+import CorporateCards from './pages/CorporateCards';
+import YieldDashboard from './pages/YieldDashboard';
+import AccountingSync from './pages/AccountingSync';
 
 import TeamManagement from './pages/TeamManagement';
 import RolesOverview from './pages/RolesOverview';
@@ -142,6 +145,9 @@ function App() {
                 <Route path="/settings" element={<WalletSettings />} />
                 <Route path="/settings/limits" element={<WalletLimits />} />
                 <Route path="/wallets/networks" element={<MultiNetworkWallet />} />
+                <Route path="/cards" element={<CorporateCards />} />
+                <Route path="/yield" element={<YieldDashboard />} />
+                <Route path="/accounting" element={<AccountingSync />} />
                 <Route path="/bridge" element={<CrossNetworkBridge />} />
                 <Route path="/history" element={<TransactionHistory />} />
                 <Route path="/security" element={<WalletSecurity />} />

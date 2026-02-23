@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"time"
@@ -138,6 +139,37 @@ func main() {
 		protected.PUT("/wallet/settings", walletHandler.UpdateSettings)
 		protected.GET("/wallet/limits", walletHandler.GetLimits)
 		protected.PUT("/wallet/limits", walletHandler.UpdateLimits)
+
+		// Corporate Cards
+		cardService := services.NewCardManagementService(database.DB)
+		cardHandler := http.NewCardHandler(cardService)
+		protected.POST("/wallet/cards", cardHandler.IssueCard)
+		protected.GET("/wallet/cards", cardHandler.ListCards)
+		protected.PUT("/wallet/cards/:id/status", cardHandler.UpdateCardStatus)
+		protected.PUT("/wallet/cards/:id/limits", cardHandler.UpdateCardLimits)
+
+		// Yield Management
+		yieldService := services.NewYieldService(database.DB)
+		yieldHandler := http.NewYieldHandler(yieldService)
+		protected.GET("/wallet/yield", yieldHandler.GetBalance)
+		protected.POST("/wallet/yield/allocate", yieldHandler.AllocateFunds)
+		protected.POST("/wallet/yield/withdraw", yieldHandler.WithdrawFunds)
+
+		// Accounting Integrations
+		accountingService := services.NewAccountingService(database.DB)
+		accountingHandler := http.NewAccountingHandler(accountingService)
+		protected.GET("/accounting/integrations", accountingHandler.GetIntegrations)
+		protected.POST("/accounting/integrations/connect", accountingHandler.ConnectProvider)
+		protected.DELETE("/accounting/integrations/:provider", accountingHandler.DisconnectProvider)
+		protected.POST("/accounting/integrations/:provider/sync", accountingHandler.SyncData)
+
+		// Yield Accrual Worker - run daily
+		go func() {
+			for {
+				time.Sleep(24 * time.Hour)
+				yieldService.AccrueInterest(context.Background())
+			}
+		}()
 
 		// Address Book
 		protected.GET("/wallet/contacts", walletHandler.GetContacts)

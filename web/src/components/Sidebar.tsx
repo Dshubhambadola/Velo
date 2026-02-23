@@ -105,6 +105,28 @@ const Sidebar: React.FC = () => {
                 </Link>
 
                 <Link
+                    to="/cards"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/cards')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/cards') ? 'text-primary' : ''}`}>credit_card</span>
+                    <span className="text-sm font-medium">Cards</span>
+                </Link>
+
+                <Link
+                    to="/yield"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/yield')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/yield') ? 'text-primary' : ''}`}>savings</span>
+                    <span className="text-sm font-medium">Treasury</span>
+                </Link>
+
+                <Link
                     to="/reports"
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/reports')
                         ? 'text-white bg-primary/10 border border-primary/20'
@@ -113,6 +135,17 @@ const Sidebar: React.FC = () => {
                 >
                     <span className={`material-icons text-xl ${isActive('/reports') ? 'text-primary' : ''}`}>assessment</span>
                     <span className="text-sm font-medium">Reports</span>
+                </Link>
+
+                <Link
+                    to="/accounting"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/accounting')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/accounting') ? 'text-primary' : ''}`}>sync_alt</span>
+                    <span className="text-sm font-medium">Accounting Sync</span>
                 </Link>
 
                 <div className="pt-4 pb-2 px-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Infrastructure</div>
