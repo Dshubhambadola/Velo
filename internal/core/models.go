@@ -1,6 +1,9 @@
 package core
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -167,6 +170,19 @@ type Integration struct {
 	UpdatedAt    time.Time
 }
 
+// TaxDocument represents a W-9, W-8BEN, or generated 1099
+type TaxDocument struct {
+	ID        uuid.UUID `gorm:"primaryKey;type:uuid"`
+	CompanyID uuid.UUID `gorm:"index;not null"`
+	UserID    uuid.UUID `gorm:"index;not null"`
+	Type      string    // w9, w8ben, 1099
+	Year      int       // Tax year, e.g., 2026
+	Status    string    // pending, verified, rejected, generated
+	FileURL   string    // S3 or mock file URL
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 // Role represents a user role (RBAC)
 type Role struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
@@ -204,10 +220,27 @@ type UserRole struct {
 
 type JSON map[string]interface{}
 
-func (j JSON) Value() (interface{}, error) {
-	return j, nil
+func (j JSON) Value() (driver.Value, error) {
+	if j == nil {
+		return nil, nil
+	}
+	bytes, err := json.Marshal(j)
+	return string(bytes), err
 }
 
 func (j *JSON) Scan(value interface{}) error {
-	return nil // Simplified for MVP
+	if value == nil {
+		*j = make(JSON)
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		str, okStr := value.(string)
+		if !okStr {
+			return errors.New("type assertion to []byte or string failed")
+		}
+		bytes = []byte(str)
+	}
+
+	return json.Unmarshal(bytes, &j)
 }

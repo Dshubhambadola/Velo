@@ -242,7 +242,44 @@ const WalletSettings: React.FC = () => {
                                 </div>
                             </div>
                         </section>
-                        {/* Section 3: Developer Options (Static for now) */}
+                        {/* Section 3: Notification Preferences */}
+                        <section>
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="material-icons text-[#0d6cf2] text-sm">notifications</span>
+                                <h2 className="text-lg font-semibold tracking-wide uppercase text-[#A0A0A0]/80">Notification Preferences</h2>
+                            </div>
+                            <div className="bg-[#121212] border border-[#262626] rounded-xl p-6 shadow-[0_0_15px_rgba(13,108,242,0.15)] transition-all flex flex-col">
+                                <div className="flex items-center justify-between py-4 border-b border-[#262626]">
+                                    <div>
+                                        <p className="font-medium text-white">Email Notifications</p>
+                                        <p className="text-xs text-[#A0A0A0]">Receive alerts for transfers and payroll batches in your inbox.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleChange('email_alerts', settings.email_alerts === undefined ? true : !settings.email_alerts)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.email_alerts !== false ? 'bg-[#0d6cf2]/20 border border-[#0d6cf2]/30' : 'bg-black border border-[#262626]'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full transition ${settings.email_alerts !== false ? 'translate-x-6 bg-[#0d6cf2]' : 'translate-x-1 bg-slate-500'}`}></span>
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-between py-4">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-medium text-white">Mobile Push Notifications</p>
+                                            <span className="px-2 py-0.5 text-[9px] uppercase tracking-widest bg-[#0d6cf2]/10 text-[#0d6cf2] border border-[#0d6cf2]/20 rounded font-bold">New</span>
+                                        </div>
+                                        <p className="text-xs text-[#A0A0A0]">Instantly receive approval requests and alerts on your mobile device.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleChange('push_alerts', settings.push_alerts === undefined ? true : !settings.push_alerts)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.push_alerts !== false ? 'bg-[#0d6cf2]/20 border border-[#0d6cf2]/30' : 'bg-black border border-[#262626]'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full transition ${settings.push_alerts !== false ? 'translate-x-6 bg-[#0d6cf2]' : 'translate-x-1 bg-slate-500'}`}></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Section 4: Developer Options (Static for now) */}
                         <section>
                             <div className="flex items-center gap-2 mb-4">
                                 <span className="material-icons text-[#0d6cf2] text-sm">code</span>

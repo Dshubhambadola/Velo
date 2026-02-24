@@ -140,6 +140,12 @@ func main() {
 		protected.GET("/wallet/limits", walletHandler.GetLimits)
 		protected.PUT("/wallet/limits", walletHandler.UpdateLimits)
 
+		// FX & Multi-Currency
+		fxService := services.NewFXService(database.DB)
+		fxHandler := http.NewFXHandler(fxService, walletService)
+		protected.POST("/wallet/fx/convert", fxHandler.ConvertCurrency)
+		protected.GET("/wallet/fx/rate", fxHandler.GetRate)
+
 		// Corporate Cards
 		cardService := services.NewCardManagementService(database.DB)
 		cardHandler := http.NewCardHandler(cardService)
@@ -162,6 +168,19 @@ func main() {
 		protected.POST("/accounting/integrations/connect", accountingHandler.ConnectProvider)
 		protected.DELETE("/accounting/integrations/:provider", accountingHandler.DisconnectProvider)
 		protected.POST("/accounting/integrations/:provider/sync", accountingHandler.SyncData)
+
+		// Mobile APIs & Push Notifications
+		pushService := services.NewPushNotificationService(database.DB)
+		mobileHandler := http.NewMobileHandler(walletService, pushService)
+		protected.GET("/mobile/dashboard", mobileHandler.GetDashboardData)
+		protected.POST("/mobile/device/register", mobileHandler.RegisterDevice)
+
+		// Tax Compliance & Document Collection
+		taxService := services.NewTaxService(database.DB)
+		taxHandler := http.NewTaxHandler(taxService)
+		protected.GET("/tax/documents", taxHandler.GetCompanyDocuments)
+		protected.POST("/tax/documents/upload", taxHandler.UploadDocument)
+		protected.POST("/tax/generate-1099s", taxHandler.Generate1099s)
 
 		// Yield Accrual Worker - run daily
 		go func() {

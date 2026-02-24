@@ -1,0 +1,127 @@
+=== RUN   TestAccountingConnections
+=== RUN   TestAccountingConnections/Connect_Quickbooks
+
+2026/02/24 11:05:08 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/accounting_service.go:29 [35;1mrecord not found
+[0m[33m[0.095ms] [34;1m[rows:0][0m SELECT * FROM `integrations` WHERE company_id = "04dec70b-8d2f-4253-9a33-4cde3b1dbe70" AND provider = "quickbooks" ORDER BY `integrations`.`id` LIMIT 1
+=== RUN   TestAccountingConnections/Sync_With_Disconnected_Provider
+
+2026/02/24 11:05:08 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/accounting_service.go:84 [35;1mrecord not found
+[0m[33m[0.029ms] [34;1m[rows:0][0m SELECT * FROM `integrations` WHERE company_id = "04dec70b-8d2f-4253-9a33-4cde3b1dbe70" AND provider = "xero" ORDER BY `integrations`.`id` LIMIT 1
+=== RUN   TestAccountingConnections/Sync_Connected_Provider
+=== RUN   TestAccountingConnections/Disconnect_Provider
+--- PASS: TestAccountingConnections (2.01s)
+    --- PASS: TestAccountingConnections/Connect_Quickbooks (0.00s)
+    --- PASS: TestAccountingConnections/Sync_With_Disconnected_Provider (0.00s)
+    --- PASS: TestAccountingConnections/Sync_Connected_Provider (2.00s)
+    --- PASS: TestAccountingConnections/Disconnect_Provider (0.00s)
+=== RUN   TestGetAllUsers
+--- PASS: TestGetAllUsers (0.00s)
+=== RUN   TestGetComplianceQueue
+--- PASS: TestGetComplianceQueue (0.00s)
+=== RUN   TestApproveKYC
+--- PASS: TestApproveKYC (0.00s)
+=== RUN   TestRejectKYC
+--- PASS: TestRejectKYC (0.00s)
+=== RUN   TestIssueCard
+=== RUN   TestIssueCard/Success_Virtual_Card
+=== RUN   TestIssueCard/Invalid_Card_Type
+=== RUN   TestIssueCard/Invalid_User
+
+2026/02/24 11:05:10 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/card_service.go:32 [35;1mrecord not found
+[0m[33m[0.051ms] [34;1m[rows:0][0m SELECT * FROM `users` WHERE (id = "db120a8c-98b1-47d0-a4fa-8ac05daa6045" AND company_id = "888bd973-3ac9-4153-88bb-fa67ec192148") AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1
+--- PASS: TestIssueCard (0.00s)
+    --- PASS: TestIssueCard/Success_Virtual_Card (0.00s)
+    --- PASS: TestIssueCard/Invalid_Card_Type (0.00s)
+    --- PASS: TestIssueCard/Invalid_User (0.00s)
+=== RUN   TestUpdateCardStatus
+=== RUN   TestUpdateCardStatus/Freeze_Card
+=== RUN   TestUpdateCardStatus/Invalid_Status
+--- PASS: TestUpdateCardStatus (0.00s)
+    --- PASS: TestUpdateCardStatus/Freeze_Card (0.00s)
+    --- PASS: TestUpdateCardStatus/Invalid_Status (0.00s)
+=== RUN   TestInitiateKYC
+--- PASS: TestInitiateKYC (0.00s)
+=== RUN   TestInitiateKYC_ExistingApplicant
+--- PASS: TestInitiateKYC_ExistingApplicant (0.00s)
+=== RUN   TestUpdateUserStatus
+--- PASS: TestUpdateUserStatus (0.00s)
+=== RUN   TestHandleWebhook
+--- PASS: TestHandleWebhook (0.00s)
+=== RUN   TestFXService_GetRate
+--- PASS: TestFXService_GetRate (0.00s)
+=== RUN   TestFXService_Convert
+=== RUN   TestFXService_Convert/Convert_EUR_to_USDC
+=== RUN   TestFXService_Convert/Convert_USDC_to_GBP
+=== RUN   TestFXService_Convert/Insufficient_Balance
+--- PASS: TestFXService_Convert (0.00s)
+    --- PASS: TestFXService_Convert/Convert_EUR_to_USDC (0.00s)
+    --- PASS: TestFXService_Convert/Convert_USDC_to_GBP (0.00s)
+    --- PASS: TestFXService_Convert/Insufficient_Balance (0.00s)
+=== RUN   TestYieldAllocation
+
+2026/02/24 11:05:10 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/yield_service_test.go:26 [35;1mUNIQUE constraint failed: companies.domain
+[0m[33m[0.051ms] [34;1m[rows:0][0m INSERT INTO `companies` (`id`,`name`,`domain`,`website`,`size`,`industry`,`location`,`created_at`,`updated_at`) VALUES ("07f3651c-35dd-46fe-8d76-2d20c827fba1","Yield Corp","","","","","","2026-02-24 11:05:10.43","2026-02-24 11:05:10.43")
+=== RUN   TestYieldAllocation/Get_Initial_Balance
+
+2026/02/24 11:05:10 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/yield_service.go:25 [35;1mrecord not found
+[0m[33m[0.026ms] [34;1m[rows:0][0m SELECT * FROM `yield_balances` WHERE company_id = "07f3651c-35dd-46fe-8d76-2d20c827fba1" ORDER BY `yield_balances`.`company_id` LIMIT 1
+=== RUN   TestYieldAllocation/Allocate_Funds
+=== RUN   TestYieldAllocation/Withdraw_Funds
+=== RUN   TestYieldAllocation/Withdraw_Insufficient_Funds
+--- PASS: TestYieldAllocation (0.00s)
+    --- PASS: TestYieldAllocation/Get_Initial_Balance (0.00s)
+    --- PASS: TestYieldAllocation/Allocate_Funds (0.00s)
+    --- PASS: TestYieldAllocation/Withdraw_Funds (0.00s)
+    --- PASS: TestYieldAllocation/Withdraw_Insufficient_Funds (0.00s)
+=== RUN   TestYieldAccrual
+
+2026/02/24 11:05:10 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/yield_service_test.go:63 [35;1mUNIQUE constraint failed: companies.domain
+[0m[33m[0.042ms] [34;1m[rows:0][0m INSERT INTO `companies` (`id`,`name`,`domain`,`website`,`size`,`industry`,`location`,`created_at`,`updated_at`) VALUES ("a8a7734f-55c4-4439-99af-5eda0eb1914e","Yield Corp","","","","","","2026-02-24 11:05:10.431","2026-02-24 11:05:10.431")
+=== RUN   TestYieldAccrual/Accrue_Interest_After_10_Days
+--- PASS: TestYieldAccrual (0.00s)
+    --- PASS: TestYieldAccrual/Accrue_Interest_After_10_Days (0.00s)
+=== RUN   TestAPIKeyService
+--- PASS: TestAPIKeyService (0.23s)
+=== RUN   TestAuthService_Register
+
+2026/02/24 11:05:10 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/auth_service.go:91 [35;1mrecord not found
+[0m[33m[0.032ms] [34;1m[rows:0][0m SELECT * FROM `roles` WHERE name = "owner" ORDER BY `roles`.`id` LIMIT 1
+--- PASS: TestAuthService_Register (0.09s)
+=== RUN   TestAuthService_Register_DuplicateEmail
+--- PASS: TestAuthService_Register_DuplicateEmail (0.08s)
+=== RUN   TestAuthService_Login
+=== RUN   TestAuthService_Login/Valid_Credentials
+=== RUN   TestAuthService_Login/Invalid_Password
+=== RUN   TestAuthService_Login/User_Not_Found
+
+2026/02/24 11:05:11 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/auth_service.go:115 [35;1mrecord not found
+[0m[33m[0.133ms] [34;1m[rows:0][0m SELECT * FROM `users` WHERE email = "unknown@example.com" AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1
+--- PASS: TestAuthService_Login (0.24s)
+    --- PASS: TestAuthService_Login/Valid_Credentials (0.08s)
+    --- PASS: TestAuthService_Login/Invalid_Password (0.08s)
+    --- PASS: TestAuthService_Login/User_Not_Found (0.00s)
+=== RUN   TestAuthService_ForgotPassword
+--- PASS: TestAuthService_ForgotPassword (0.09s)
+=== RUN   TestParsePayrollCSV
+--- PASS: TestParsePayrollCSV (0.00s)
+=== RUN   TestParsePayrollCSV_InvalidFormat
+--- PASS: TestParsePayrollCSV_InvalidFormat (0.00s)
+=== RUN   TestPayrollService_CreateBatch
+--- PASS: TestPayrollService_CreateBatch (0.00s)
+=== RUN   TestPayrollService_CreateBatch_HighAmount_Approval
+--- PASS: TestPayrollService_CreateBatch_HighAmount_Approval (0.00s)
+=== RUN   TestPayrollService_ApproveBatch
+--- PASS: TestPayrollService_ApproveBatch (0.00s)
+=== RUN   TestReportingService_GetCompanyAnalytics
+--- PASS: TestReportingService_GetCompanyAnalytics (0.00s)
+=== RUN   TestWalletService_EnsureWallet
+
+2026/02/24 11:05:11 [31;1m/Users/shubhambadola/Documents/codebase/public/Velo/internal/core/services/wallet_service.go:30 [35;1mrecord not found
+[0m[33m[0.027ms] [34;1m[rows:0][0m SELECT * FROM `wallets` WHERE user_id = "4f73b02d-f87d-4fa0-ad68-6da8a5c14e28" AND `wallets`.`deleted_at` IS NULL ORDER BY `wallets`.`id` LIMIT 1
+--- PASS: TestWalletService_EnsureWallet (0.00s)
+=== RUN   TestWalletService_GetBalance
+--- PASS: TestWalletService_GetBalance (0.01s)
+=== RUN   TestWalletService_GetBalance_ProviderError
+--- PASS: TestWalletService_GetBalance_ProviderError (0.00s)
+PASS
+ok  	velo/internal/core/services	3.047s

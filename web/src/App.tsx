@@ -67,6 +67,7 @@ import WalletAnalytics from './pages/WalletAnalytics';
 import CorporateCards from './pages/CorporateCards';
 import YieldDashboard from './pages/YieldDashboard';
 import AccountingSync from './pages/AccountingSync';
+import TaxCenter from './pages/TaxCenter';
 
 import TeamManagement from './pages/TeamManagement';
 import RolesOverview from './pages/RolesOverview';
@@ -148,6 +149,7 @@ function App() {
                 <Route path="/cards" element={<CorporateCards />} />
                 <Route path="/yield" element={<YieldDashboard />} />
                 <Route path="/accounting" element={<AccountingSync />} />
+                <Route path="/tax" element={<TaxCenter />} />
                 <Route path="/bridge" element={<CrossNetworkBridge />} />
                 <Route path="/history" element={<TransactionHistory />} />
                 <Route path="/security" element={<WalletSecurity />} />

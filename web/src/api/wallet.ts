@@ -10,6 +10,11 @@ export const getWalletBalance = async () => {
     return response.data;
 };
 
+export const getWallet = async () => {
+    const response = await client.get('/wallet');
+    return response.data;
+};
+
 export const getWalletTransactions = async () => {
     const response = await client.get('/wallet/transactions');
     return response.data;

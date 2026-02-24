@@ -12,14 +12,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func setupYieldTestDB() *gorm.DB {
-	db, _ := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+func setupYieldTestDB(testName string) *gorm.DB {
+	db, _ := gorm.Open(sqlite.Open("file:"+testName+"?mode=memory&cache=shared"), &gorm.Config{})
 	db.AutoMigrate(&core.Company{}, &core.YieldBalance{})
 	return db
 }
 
 func TestYieldAllocation(t *testing.T) {
-	db := setupYieldTestDB()
+	db := setupYieldTestDB(uuid.NewString())
 	service := NewYieldService(db)
 
 	companyID := uuid.New()
@@ -56,7 +56,7 @@ func TestYieldAllocation(t *testing.T) {
 }
 
 func TestYieldAccrual(t *testing.T) {
-	db := setupYieldTestDB()
+	db := setupYieldTestDB(uuid.NewString())
 	service := NewYieldService(db)
 
 	companyID := uuid.New()

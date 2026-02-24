@@ -11,14 +11,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func setupCardTestDB() *gorm.DB {
-	db, _ := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+func setupCardTestDB(testName string) *gorm.DB {
+	db, _ := gorm.Open(sqlite.Open("file:"+testName+"?mode=memory&cache=shared"), &gorm.Config{})
 	db.AutoMigrate(&core.Company{}, &core.User{}, &core.CorporateCard{})
 	return db
 }
 
 func TestIssueCard(t *testing.T) {
-	db := setupCardTestDB()
+	db := setupCardTestDB(uuid.NewString())
 	service := NewCardManagementService(db)
 
 	companyID := uuid.New()
@@ -55,7 +55,7 @@ func TestIssueCard(t *testing.T) {
 }
 
 func TestUpdateCardStatus(t *testing.T) {
-	db := setupCardTestDB()
+	db := setupCardTestDB(uuid.NewString())
 	service := NewCardManagementService(db)
 
 	companyID := uuid.New()

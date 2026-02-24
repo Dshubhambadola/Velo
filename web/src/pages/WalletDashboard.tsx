@@ -3,7 +3,8 @@ import Sidebar from '../components/Sidebar';
 import DepositModal from '../components/DepositModal';
 import WithdrawModal from '../components/WithdrawModal';
 import TransactionDetailModal from '../components/TransactionDetailModal';
-import { getWalletBalance, getWalletTransactions } from '../api/wallet';
+import { getWalletBalance, getWalletTransactions, getWallet } from '../api/wallet';
+import { convertCurrency, getFxRate } from '../api/fx';
 
 const WalletDashboard: React.FC = () => {
     // State for wallet balance
@@ -14,14 +15,35 @@ const WalletDashboard: React.FC = () => {
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
     const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+    const [wallet, setWallet] = useState<any>(null);
+
+    // FX State
+    const [isFxModalOpen, setIsFxModalOpen] = useState(false);
+    const [fxSource, setFxSource] = useState('USDC');
+    const [fxTarget, setFxTarget] = useState('EUR');
+    const [fxAmount, setFxAmount] = useState('');
+    const [fxRate, setFxRate] = useState<number | null>(null);
+    const [isConverting, setIsConverting] = useState(false);
 
     const [chartRange, setChartRange] = useState('1W');
+
+    // Fetch rate when currencies change
+    useEffect(() => {
+        if (isFxModalOpen && fxSource && fxTarget && fxSource !== fxTarget) {
+            getFxRate(fxSource, fxTarget).then(setFxRate).catch(console.error);
+        } else {
+            setFxRate(null);
+        }
+    }, [isFxModalOpen, fxSource, fxTarget]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const balanceData = await getWalletBalance();
                 setBalance(balanceData);
+
+                const walletData = await getWallet();
+                setWallet(walletData);
 
                 const txData = await getWalletTransactions();
                 setTransactions(Array.isArray(txData) ? txData : []);
@@ -40,6 +62,27 @@ const WalletDashboard: React.FC = () => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
     };
 
+    const handleConvert = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setIsConverting(true);
+            await convertCurrency(fxSource, fxTarget, parseFloat(fxAmount));
+
+            // Refresh data
+            const balanceData = await getWalletBalance();
+            setBalance(balanceData);
+            const walletData = await getWallet();
+            setWallet(walletData);
+
+            setIsFxModalOpen(false);
+            setFxAmount('');
+        } catch (error: any) {
+            alert(error.response?.data?.error || "Conversion failed");
+        } finally {
+            setIsConverting(false);
+        }
+    };
+
     return (
         <div className="flex min-h-screen bg-background-dark text-slate-200 font-display selection:bg-primary/30">
             <Sidebar />
@@ -48,6 +91,96 @@ const WalletDashboard: React.FC = () => {
             <DepositModal isOpen={isDepositModalOpen} onClose={() => setIsDepositModalOpen(false)} />
             <WithdrawModal isOpen={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} />
             <TransactionDetailModal isOpen={isTransactionModalOpen} onClose={() => setIsTransactionModalOpen(false)} transaction={selectedTransaction} />
+
+            {/* FX Conversion Modal */}
+            {isFxModalOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-obsidian border border-obsidian-border rounded-xl w-full max-w-md p-6 relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <span className="material-icons text-indigo-400">currency_exchange</span>
+                                Convert Currency
+                            </h2>
+                            <button onClick={() => setIsFxModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                                <span className="material-icons">close</span>
+                            </button>
+                        </div>
+                        <form onSubmit={handleConvert}>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">From</label>
+                                    <div className="flex bg-black border border-white/10 rounded-lg p-2 items-center focus-within:border-primary transition-colors">
+                                        <select
+                                            value={fxSource}
+                                            onChange={(e) => setFxSource(e.target.value)}
+                                            className="bg-transparent text-white font-bold outline-none border-none pr-4"
+                                        >
+                                            <option value="USDC">USDC (Base)</option>
+                                            <option value="EUR">EUR (Euro)</option>
+                                            <option value="GBP">GBP (British Pound)</option>
+                                        </select>
+                                        <div className="w-px h-6 bg-white/10 mx-2"></div>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0.01"
+                                            value={fxAmount}
+                                            onChange={(e) => setFxAmount(e.target.value)}
+                                            placeholder="0.00"
+                                            className="w-full bg-transparent text-white outline-none pl-2 text-right"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-center -my-2 relative z-10">
+                                    <div className="bg-obsidian-grey border border-obsidian-border rounded-full p-1 cursor-pointer hover:bg-slate-800 transition-colors"
+                                        onClick={() => { setFxSource(fxTarget); setFxTarget(fxSource); }}
+                                    >
+                                        <span className="material-icons text-slate-400 text-sm">swap_vert</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">To</label>
+                                    <div className="flex bg-black border border-white/10 rounded-lg p-3 items-center">
+                                        <select
+                                            value={fxTarget}
+                                            onChange={(e) => setFxTarget(e.target.value)}
+                                            className="bg-transparent text-white font-bold outline-none border-none pr-4"
+                                        >
+                                            <option value="USDC">USDC (Base)</option>
+                                            <option value="EUR">EUR (Euro)</option>
+                                            <option value="GBP">GBP (British Pound)</option>
+                                        </select>
+                                        <div className="w-px h-6 bg-white/10 mx-2"></div>
+                                        <div className="w-full text-right text-slate-300">
+                                            {fxAmount && fxRate ? (parseFloat(fxAmount) * fxRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {fxRate !== null && (
+                                    <div className="flex justify-between items-center text-xs text-indigo-400 bg-indigo-500/10 p-2 rounded-lg border border-indigo-500/20">
+                                        <span>Exchange Rate</span>
+                                        <span className="font-mono">1 {fxSource} = {fxRate.toFixed(4)} {fxTarget}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-8">
+                                <button
+                                    type="submit"
+                                    disabled={isConverting || !fxAmount}
+                                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                >
+                                    {isConverting ? <span className="material-icons animate-spin text-sm">refresh</span> : 'Execute Conversion'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-black relative p-8">
@@ -63,6 +196,12 @@ const WalletDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsFxModalOpen(true)}
+                            className="px-5 py-2.5 bg-obsidian-grey border border-obsidian-border hover:border-slate-600 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-indigo-400"
+                        >
+                            <span className="material-icons text-sm">currency_exchange</span> Convert
+                        </button>
                         <button
                             onClick={() => setIsDepositModalOpen(true)}
                             className="px-5 py-2.5 bg-obsidian-grey border border-obsidian-border hover:border-slate-600 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
@@ -147,20 +286,42 @@ const WalletDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Network Assets - Still Mocked for visual richness until multi-chain is real */}
+                {/* Fiat & Crypto Balances */}
                 <div className="mb-8">
-                    <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">Active Networks</h3>
+                    <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">Global Balances</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-obsidian-grey border border-obsidian-border p-4 rounded-xl flex items-center gap-4 hover:border-primary/50 transition-all cursor-pointer group">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
-                                <span className="material-icons">diamond</span>
+                            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                                <span className="material-icons font-bold">attach_money</span>
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">Ethereum</p>
-                                <p className="text-xs text-slate-500 font-mono">0.0 ETH</p>
+                                <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">USDC (Base)</p>
+                                <p className="text-xs text-slate-500 font-mono">{formatCurrency(wallet?.Balance || balance?.Available)}</p>
                             </div>
                         </div>
-                        {/* More mocked networks... */}
+
+                        {wallet?.FiatBalances && Object.entries(wallet.FiatBalances).map(([currency, amount]) => (
+                            <div key={currency} className="bg-obsidian-grey border border-obsidian-border p-4 rounded-xl flex items-center gap-4 hover:border-indigo-400/50 transition-all cursor-pointer group">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                                    <span className="material-icons font-bold">{currency === 'EUR' ? 'euro' : currency === 'GBP' ? 'currency_pound' : 'account_balance_wallet'}</span>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors uppercase">{currency} (Fiat)</p>
+                                    <p className="text-xs text-slate-500 font-mono">
+                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(parseFloat(amount as string))}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Add Currency Placeholder */}
+                        <div
+                            onClick={() => setIsFxModalOpen(true)}
+                            className="border border-dashed border-white/10 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-white/30 hover:bg-white/[0.02] transition-all cursor-pointer text-slate-500 hover:text-white"
+                        >
+                            <span className="material-icons text-lg">add</span>
+                            <p className="text-[10px] font-bold uppercase tracking-widest">Convert Funds</p>
+                        </div>
                     </div>
                 </div>
 

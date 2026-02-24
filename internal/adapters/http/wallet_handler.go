@@ -62,6 +62,21 @@ func (h *WalletHandler) CreateWallet(c *gin.Context) {
 	c.JSON(http.StatusCreated, wallet)
 }
 
+func (h *WalletHandler) GetWallet(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	wallet, err := h.Service.EnsureWallet(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, wallet)
+}
+
 func (h *WalletHandler) GetBalance(c *gin.Context) {
 	userID, err := getUserID(c)
 	if err != nil {
