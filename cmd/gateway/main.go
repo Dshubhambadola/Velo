@@ -153,6 +153,7 @@ func main() {
 		protected.GET("/wallet/cards", cardHandler.ListCards)
 		protected.PUT("/wallet/cards/:id/status", cardHandler.UpdateCardStatus)
 		protected.PUT("/wallet/cards/:id/limits", cardHandler.UpdateCardLimits)
+		protected.POST("/wallet/cards/:id/activate", cardHandler.ActivateCard)
 
 		// Yield Management
 		yieldService := services.NewYieldService(database.DB)
@@ -181,6 +182,24 @@ func main() {
 		protected.GET("/tax/documents", taxHandler.GetCompanyDocuments)
 		protected.POST("/tax/documents/upload", taxHandler.UploadDocument)
 		protected.POST("/tax/generate-1099s", taxHandler.Generate1099s)
+
+		// Invoicing & Accounts Receivable (Protected)
+		invoiceService := services.NewInvoiceService(database.DB, walletService)
+		invoiceHandler := http.NewInvoiceHandler(invoiceService)
+		protected.POST("/invoices", invoiceHandler.CreateInvoice)
+		protected.GET("/invoices", invoiceHandler.GetCompanyInvoices)
+
+		// Departmental Budgeting & Sub-Accounts (Protected)
+		subAccountService := services.NewSubAccountService(database.DB, walletService)
+		subAccountHandler := http.NewSubAccountHandler(subAccountService)
+		protected.POST("/sub-accounts", subAccountHandler.CreateSubAccount)
+		protected.GET("/sub-accounts", subAccountHandler.GetSubAccounts)
+		protected.POST("/sub-accounts/:id/deposit", subAccountHandler.DepositFunds)
+
+		// Public Invoicing Routes (No Auth)
+		publicInvoices := r.Group("/public/invoices")
+		publicInvoices.GET("/:id", invoiceHandler.GetInvoice)
+		publicInvoices.POST("/:id/pay", invoiceHandler.PayInvoice)
 
 		// Yield Accrual Worker - run daily
 		go func() {

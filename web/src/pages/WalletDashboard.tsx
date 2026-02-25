@@ -5,11 +5,13 @@ import WithdrawModal from '../components/WithdrawModal';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import { getWalletBalance, getWalletTransactions, getWallet } from '../api/wallet';
 import { convertCurrency, getFxRate } from '../api/fx';
+import { getSubAccounts } from '../api/subaccount';
 
 const WalletDashboard: React.FC = () => {
     // State for wallet balance
     const [balance, setBalance] = useState<any>(null);
     const [transactions, setTransactions] = useState<any[]>([]);
+    const [subAccounts, setSubAccounts] = useState<any[]>([]);
     const [isLoadingBalance, setIsLoadingBalance] = useState(true);
     const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -47,6 +49,9 @@ const WalletDashboard: React.FC = () => {
 
                 const txData = await getWalletTransactions();
                 setTransactions(Array.isArray(txData) ? txData : []);
+
+                const subData = await getSubAccounts();
+                setSubAccounts(subData.sub_accounts || []);
             } catch (error) {
                 console.error("Failed to fetch wallet data", error);
             } finally {
@@ -324,6 +329,45 @@ const WalletDashboard: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Departmental Allocation */}
+                {subAccounts && subAccounts.length > 0 && (
+                    <div className="mb-8">
+                        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">Departmental Budgets</h3>
+                        <div className="bg-obsidian-grey border border-obsidian-border rounded-xl p-6">
+                            <div className="flex gap-4">
+                                {subAccounts.map((acc, index) => {
+                                    const totalAllocated = subAccounts.reduce((sum, a) => sum + a.Balance, 0);
+                                    const treasuryBalance = (balance?.Available || 0) * 100;
+                                    const totalFunds = treasuryBalance + totalAllocated;
+                                    const widthPercent = (acc.Balance / totalFunds) * 100;
+
+                                    // Different colors for different departments
+                                    const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-rose-500'];
+                                    const bgColor = colors[index % colors.length];
+
+                                    return (
+                                        <div key={acc.ID} className="flex flex-col gap-2 w-full" style={{ width: `${Math.max(widthPercent, 5)}%` }}>
+                                            <div className={`h-2 rounded-full ${bgColor}`}></div>
+                                            <div className="mt-1">
+                                                <p className="text-xs font-bold text-white truncate">{acc.Name}</p>
+                                                <p className="text-[10px] text-slate-500 font-mono mt-0.5">{formatCurrency(acc.Balance / 100)}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {/* Treasury Remainder */}
+                                <div className="flex flex-col gap-2 flex-grow">
+                                    <div className="h-2 rounded-full bg-slate-700"></div>
+                                    <div className="mt-1">
+                                        <p className="text-xs font-bold text-slate-400">Main Treasury</p>
+                                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">{formatCurrency(balance?.Available)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Transaction Table - Real Data */}
                 <div className="bg-obsidian-grey border border-obsidian-border rounded-xl overflow-hidden">

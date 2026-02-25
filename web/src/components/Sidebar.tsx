@@ -159,6 +159,28 @@ const Sidebar: React.FC = () => {
                     <span className="text-sm font-medium">Tax Center</span>
                 </Link>
 
+                <Link
+                    to="/invoices"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/invoices')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/invoices') ? 'text-primary' : ''}`}>request_quote</span>
+                    <span className="text-sm font-medium">Invoicing</span>
+                </Link>
+
+                <Link
+                    to="/budgeting"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/budgeting')
+                        ? 'text-white bg-primary/10 border border-primary/20'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <span className={`material-icons text-xl ${isActive('/budgeting') ? 'text-primary' : ''}`}>account_tree</span>
+                    <span className="text-sm font-medium">Budgeting</span>
+                </Link>
+
                 <div className="pt-4 pb-2 px-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Infrastructure</div>
 
                 <Link
