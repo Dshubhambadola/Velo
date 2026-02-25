@@ -9,6 +9,8 @@ export interface Card {
     ExpiryYear: number;
     DailyLimit: number;
     MonthlyLimit: number;
+    ShippingStatus?: string;
+    TrackingNumber?: string;
     CreatedAt: string;
 }
 
@@ -34,5 +36,10 @@ export const updateCardStatus = async (id: string, status: string) => {
 
 export const updateCardLimits = async (id: string, daily_limit: number, monthly_limit: number) => {
     const response = await client.put(`/wallet/cards/${id}/limits`, { daily_limit, monthly_limit });
+    return response.data;
+};
+
+export const activateCard = async (id: string, cvv: string) => {
+    const response = await client.post(`/wallet/cards/${id}/activate`, { cvv });
     return response.data;
 };

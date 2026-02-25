@@ -37,19 +37,33 @@ func (s *CardManagementService) IssueCard(ctx context.Context, companyID, userID
 	// In a real app, this is where we call the provider API to provision the card
 	mockProviderID := fmt.Sprintf("card_%d", time.Now().UnixNano())
 	mockLast4 := fmt.Sprintf("%04d", rand.Intn(10000))
+	cvv := fmt.Sprintf("%03d", rand.Intn(1000))
+
+	status := "active"
+	shippingStatus := "delivered"
+	trackingNumber := ""
+
+	if cardType == "physical" {
+		status = "inactive"
+		shippingStatus = "shipped"
+		trackingNumber = fmt.Sprintf("1Z%06d", rand.Intn(999999))
+	}
 
 	card := &core.CorporateCard{
 		ID:             uuid.New(),
 		CompanyID:      companyID,
 		UserID:         userID,
 		Type:           cardType,
-		Status:         "active",
+		Status:         status,
 		Last4:          mockLast4,
 		ExpiryMonth:    int(time.Now().Month()) + 1, // Simple mock expiry
 		ExpiryYear:     time.Now().Year() + 3,
 		DailyLimit:     dailyLimit,
 		MonthlyLimit:   monthlyLimit,
 		ProviderCardID: mockProviderID,
+		CVV:            cvv,
+		ShippingStatus: shippingStatus,
+		TrackingNumber: trackingNumber,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}
@@ -116,5 +130,33 @@ func (s *CardManagementService) UpdateCardLimits(ctx context.Context, companyID,
 
 	// Mock Provider Interaction: update spend controls on Stripe
 
+	return nil
+}
+
+// ActivateCard allows an employee to activate their physical card using the CVV
+func (s *CardManagementService) ActivateCard(ctx context.Context, companyID, cardID uuid.UUID, cvv string) error {
+	var card core.CorporateCard
+	if err := s.DB.Where("id = ? AND company_id = ?", cardID, companyID).First(&card).Error; err != nil {
+		return err
+	}
+
+	if card.Status == "active" {
+		return errors.New("card is already active")
+	}
+
+	if card.CVV != cvv {
+		return errors.New("invalid CVV - activation failed")
+	}
+
+	result := s.DB.Model(&core.CorporateCard{}).
+		Where("id = ? AND company_id = ?", cardID, companyID).
+		Updates(map[string]interface{}{
+			"status":          "active",
+			"shipping_status": "delivered",
+		})
+
+	if result.Error != nil {
+		return result.Error
+	}
 	return nil
 }

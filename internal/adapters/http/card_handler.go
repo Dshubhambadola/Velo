@@ -130,3 +130,31 @@ func (h *CardHandler) UpdateCardLimits(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "card limits updated"})
 }
+
+// ActivateCard allows activating a physical card with a CVV
+func (h *CardHandler) ActivateCard(c *gin.Context) {
+	companyID, _ := c.MustGet("company_id").(uuid.UUID)
+	cardIDStr := c.Param("id")
+
+	var req struct {
+		CVV string `json:"cvv" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	cardID, err := uuid.Parse(cardIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid card ID format"})
+		return
+	}
+
+	if err := h.Service.ActivateCard(c.Request.Context(), companyID, cardID, req.CVV); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Card successfully activated"})
+}

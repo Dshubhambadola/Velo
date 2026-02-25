@@ -8,6 +8,10 @@ const CorporateCards: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isIssuing, setIsIssuing] = useState(false);
 
+    // Activation state
+    const [activationCardId, setActivationCardId] = useState<string | null>(null);
+    const [activationCvV, setActivationCvV] = useState('');
+
     // Form state
     const [cardType, setCardType] = useState('virtual');
     const [dailyLimit, setDailyLimit] = useState<number | ''>('');
@@ -60,6 +64,27 @@ const CorporateCards: React.FC = () => {
         } catch (error) {
             console.error("Failed to update status:", error);
         }
+    };
+
+    const handleActivate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!activationCardId) return;
+
+        try {
+            const { activateCard } = await import('../api/cards');
+            await activateCard(activationCardId, activationCvV);
+            setCards(cards.map(c => c.ID === activationCardId ? { ...c, Status: 'active', ShippingStatus: 'delivered' } : c));
+            setActivationCardId(null);
+            setActivationCvV('');
+            alert("Card successfully activated!");
+        } catch (error: any) {
+            console.error(error);
+            alert(error.response?.data?.error || "Invalid CVV");
+        }
+    };
+
+    const handlePushProvision = (cardType: string) => {
+        alert(`Mocking ${cardType === 'physical' ? 'Apple Pay' : 'Google Pay'} push provisioning payload generation...`);
     };
 
     return (
@@ -149,6 +174,42 @@ const CorporateCards: React.FC = () => {
                         </div>
                     )}
 
+                    {/* Activation Modal */}
+                    {activationCardId && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 relative shadow-2xl max-w-sm w-full">
+                                <button
+                                    onClick={() => setActivationCardId(null)}
+                                    className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                                >
+                                    ✕
+                                </button>
+                                <h2 className="text-xl font-semibold text-white mb-2">Activate Physical Card</h2>
+                                <p className="text-zinc-400 text-sm mb-6">Enter the 3-digit CVV found on the back of your physical card to unlock it.</p>
+                                <form onSubmit={handleActivate} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-400 mb-2">CVV</label>
+                                        <input
+                                            type="text"
+                                            maxLength={3}
+                                            required
+                                            value={activationCvV}
+                                            onChange={(e) => setActivationCvV(e.target.value)}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-mono"
+                                            placeholder="123"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-white text-black px-6 py-3 rounded-xl font-medium hover:bg-zinc-200 transition-colors mt-4"
+                                    >
+                                        Activate Card
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Cards Grid */}
                     {loading ? (
                         <div className="text-zinc-500 py-10">Loading your cards...</div>
@@ -221,6 +282,38 @@ const CorporateCards: React.FC = () => {
                                             <Cog6ToothIcon className="w-5 h-5" />
                                         </button>
                                     </div>
+
+                                    {/* Logistics & Provisioning area */}
+                                    {card.Type === 'physical' && card.Status === 'inactive' && (
+                                        <div className="mt-4 pt-4 border-t border-zinc-800">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Shipping Status</span>
+                                                <span className="text-xs text-orange-400 font-medium bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">{card.ShippingStatus || 'shipped'}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <span className="text-xs text-zinc-400">Tracking</span>
+                                                <span className="text-xs text-zinc-300 font-mono bg-black px-2 py-1 rounded">{card.TrackingNumber || '1Z999999'}</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setActivationCardId(card.ID)}
+                                                className="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-medium rounded-lg transition-all"
+                                            >
+                                                Activate Required
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {card.Status === 'active' && (
+                                        <div className="mt-4 pt-4 border-t border-zinc-800">
+                                            <button
+                                                onClick={() => handlePushProvision(card.Type)}
+                                                className="w-full py-2 bg-black border border-zinc-700 hover:border-zinc-500 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <span className="material-icons text-sm">contactless</span>
+                                                Add to Apple Wallet
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
