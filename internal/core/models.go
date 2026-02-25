@@ -139,6 +139,9 @@ type CorporateCard struct {
 	DailyLimit     int       `gorm:"default:0"` // 0 = no specific limit
 	MonthlyLimit   int       `gorm:"default:0"` // 0 = no specific limit
 	ProviderCardID string    // ID from Stripe/Marqeta
+	CVV            string    // 3 or 4 digit security code
+	ShippingStatus string    // e.g., 'shipped', 'delivered' (physical only)
+	TrackingNumber string    // Mock carrier tracking number
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -181,6 +184,34 @@ type TaxDocument struct {
 	FileURL   string    // S3 or mock file URL
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+// Invoice represents a B2B invoice generated for a client.
+type Invoice struct {
+	ID          uuid.UUID `gorm:"primaryKey;type:uuid"`
+	CompanyID   uuid.UUID `gorm:"index;not null"`
+	ClientName  string    `gorm:"not null"`
+	ClientEmail string    `gorm:"not null"`
+	Amount      int       // In cents
+	Currency    string    // e.g., "USDC", "USD"
+	Status      string    // "pending", "paid", "overdue", "cancelled"
+	DueDate     time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+// SubAccount represents a departmental checking/budgeting account
+type SubAccount struct {
+	ID         uuid.UUID  `gorm:"primaryKey;type:uuid"`
+	CompanyID  uuid.UUID  `gorm:"index;not null"`
+	WalletID   uuid.UUID  `gorm:"index;not null"` // Master treasury wallet
+	Name       string     // "Marketing", "Engineering"
+	Balance    int        // Allocated funds in cents
+	Currency   string     // e.g., "USDC"
+	ManagerID  *uuid.UUID `gorm:"index"` // Optional manager assigned for RBAC
+	SpendLimit int        // Monthly spend limit in cents
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 // Role represents a user role (RBAC)
